@@ -8,17 +8,11 @@
         <artifactId>twister</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>twister-proto</artifactId>
+    <artifactId>twister-avro</artifactId>
     <dependencies>
         <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.os72</groupId>
-            <artifactId>protobuf-dynamic</artifactId>
-            <scope>test</scope>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
