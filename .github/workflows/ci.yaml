@@ -1,0 +1,30 @@
+name: recap
+
+on:
+  push:
+    branches: [ main ]
+
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        java-version: ['11']
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      uses: actions/setup-java@v1
+      with:
+        java-version: ${{ matrix.java-version }}
+
+    - name: Build
+      run: mvn -B clean package
+
+    - name: Run tests
+      run: mvn test

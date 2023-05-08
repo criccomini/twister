@@ -9,6 +9,5 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>dev.twister</groupId>
     <artifactId>twister-proto</artifactId>
 </project>
