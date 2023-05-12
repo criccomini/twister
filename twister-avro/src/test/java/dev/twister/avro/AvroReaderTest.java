@@ -75,21 +75,13 @@ public class AvroReaderTest extends TestCase {
         record.put("fixedField", new GenericData.Fixed(schema.getField("fixedField").schema(), new byte[]{1, 2, 3, 4}));
 
         ByteBuffer byteBuffer = encodeRecordToByteBuffer(record, schema);
-
         Map<String, Object> result = new AvroReader().read(byteBuffer, schema);
-
-        Map<String, Object> expected = new HashMap<>();
-        expected.put("enumField", "GREEN");
-        expected.put("arrayField", Arrays.asList("Aa", "Bb", "Cc"));
-        expected.put("mapField", map);
-        expected.put("unionField", "example");
-        expected.put("fixedField", new byte[]{1, 2, 3, 4});
 
         assertEquals("GREEN", result.get("enumField"));
         assertEquals(Arrays.asList("Aa", "Bb", "Cc"), result.get("arrayField"));
         assertEquals(map, result.get("mapField"));
         assertEquals("example", result.get("unionField"));
-        Assert.assertArrayEquals(new byte[]{1, 2, 3, 4}, (byte[]) result.get("fixedField"));
+        assertEquals(ByteBuffer.wrap(new byte[]{1, 2, 3, 4}), result.get("fixedField"));
     }
 
     public void testNullStringUnionType() throws Exception {

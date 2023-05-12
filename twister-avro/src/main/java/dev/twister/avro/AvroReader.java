@@ -35,7 +35,7 @@ public class AvroReader {
             case FIXED:
                 byte[] fixedBytes = new byte[schema.getFixedSize()];
                 decoder.readFixed(fixedBytes);
-                return fixedBytes;
+                return ByteBuffer.wrap(fixedBytes);
             case ARRAY:
                 Schema elementSchema = schema.getElementType();
                 long arraySize = decoder.readArrayStart();
