@@ -12,10 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 public class AvroReader {
-    private final DecoderFactory decoderFactory = DecoderFactory.get();
-
     public Map<String, Object> read(ByteBuffer inputBuffer, Schema schema) throws IOException {
-        BinaryDecoder decoder = decoderFactory.binaryDecoder(inputBuffer.array(), null);
+        BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(inputBuffer.array(), null);
         return (Map<String, Object>) readBasedOnSchema(decoder, schema);
     }
 
