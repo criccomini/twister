@@ -13,9 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class BytesToPojo {
+public class ProtoReader {
 
-    public static Map<String, Object> read(ByteBuffer byteBuffer, Descriptor descriptor) {
+    public static Map<String, Object> read(ByteBuffer inputBuffer, Descriptor descriptor) {
         Map<String, Object> resultMap = new HashMap<>();
 
         // Initialize resultMap with default values
@@ -27,8 +27,8 @@ public class BytesToPojo {
             }
         }
 
-        while (byteBuffer.hasRemaining()) {
-            int key = (int) readVarint(byteBuffer);
+        while (inputBuffer.hasRemaining()) {
+            int key = (int) readVarint(inputBuffer);
             int wireType = key & 0x07;
             int fieldNumber = key >>> 3;
 
@@ -45,7 +45,7 @@ public class BytesToPojo {
 
             switch (wireType) {
                 case 0: // Varint, SignedVarint, Bool, Enum
-                    long rawValue = readVarint(byteBuffer);
+                    long rawValue = readVarint(inputBuffer);
                     Object value;
 
                     switch (fieldDescriptor.getType()) {
@@ -76,7 +76,7 @@ public class BytesToPojo {
                     addToResultMap(resultMap, fieldName, value, fieldDescriptor.isRepeated(), isOneof);
                     break;
                 case 1: // Fixed64, SFixed64, Double
-                    long rawFixed64Value = byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getLong();
+                    long rawFixed64Value = inputBuffer.order(ByteOrder.LITTLE_ENDIAN).getLong();
                     if (fieldDescriptor.getType() == FieldDescriptor.Type.DOUBLE) {
                         addToResultMap(resultMap, fieldName, Double.longBitsToDouble(rawFixed64Value), fieldDescriptor.isRepeated(), isOneof);
                     } else {
@@ -91,9 +91,9 @@ public class BytesToPojo {
                         FieldDescriptor keyField = mapEntryDescriptor.findFieldByNumber(1);
                         FieldDescriptor valueField = mapEntryDescriptor.findFieldByNumber(2);
 
-                        int length = (int) readVarint(byteBuffer);
+                        int length = (int) readVarint(inputBuffer);
                         byte[] bytes = new byte[length];
-                        byteBuffer.get(bytes);
+                        inputBuffer.get(bytes);
                         ByteBuffer nestedByteBuffer = ByteBuffer.wrap(bytes);
                         Map<String, Object> mapEntry = read(nestedByteBuffer, mapEntryDescriptor);
 
@@ -104,9 +104,9 @@ public class BytesToPojo {
                         Map<Object, Object> map = (Map<Object, Object>) resultMap.computeIfAbsent(fieldName, k -> new HashMap<>());
                         map.put(mapKey, mapValue);
                     } else {
-                        int length = (int) readVarint(byteBuffer);
+                        int length = (int) readVarint(inputBuffer);
                         byte[] bytes = new byte[length];
-                        byteBuffer.get(bytes);
+                        inputBuffer.get(bytes);
                         if (fieldDescriptor.getType() == FieldDescriptor.Type.STRING) {
                             String string = new String(bytes, StandardCharsets.UTF_8);
                             addToResultMap(resultMap, fieldName, string, fieldDescriptor.isRepeated(), isOneof);
@@ -120,7 +120,7 @@ public class BytesToPojo {
                     }
                     break;
                 case 5: // Fixed32, SFixed32, Float
-                    int rawFixed32Value = byteBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
+                    int rawFixed32Value = inputBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
                     if (fieldDescriptor.getType() == FieldDescriptor.Type.FLOAT) {
                         addToResultMap(resultMap, fieldName, Float.intBitsToFloat(rawFixed32Value), fieldDescriptor.isRepeated(), isOneof);
                     } else {

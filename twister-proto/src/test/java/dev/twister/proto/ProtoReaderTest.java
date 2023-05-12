@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 import static org.junit.Assert.*;
 
-public class BytesToPojoTest extends TestCase {
+public class ProtoReaderTest extends TestCase {
     public void testRead() throws Exception {
         // Load the schema from the .proto schema string
         DynamicSchema.Builder schemaBuilder = DynamicSchema.newBuilder();
@@ -42,7 +42,7 @@ public class BytesToPojoTest extends TestCase {
         ByteBuffer byteBuffer = ByteBuffer.wrap(dynamicMessageBuilder.build().toByteArray());
 
         // Convert the byte buffer to a map using the descriptor
-        Map<String, Object> resultMap = BytesToPojo.read(byteBuffer, descriptor);
+        Map<String, Object> resultMap = ProtoReader.read(byteBuffer, descriptor);
 
         // Verify the result
         assertEquals(150, resultMap.get("int_field"));
@@ -77,7 +77,7 @@ public class BytesToPojoTest extends TestCase {
         ByteBuffer byteBuffer = ByteBuffer.wrap(dynamicMessageBuilder.build().toByteArray());
 
         // Convert the byte buffer to a map using the descriptor
-        Map<String, Object> resultMap = BytesToPojo.read(byteBuffer, descriptor);
+        Map<String, Object> resultMap = ProtoReader.read(byteBuffer, descriptor);
 
         // Verify the result
         assertNull(resultMap.get("int_field"));
@@ -123,7 +123,7 @@ public class BytesToPojoTest extends TestCase {
         ByteBuffer byteBuffer = ByteBuffer.wrap(outerMessageBuilder.build().toByteArray());
 
         // Convert the byte buffer to a map using the descriptor
-        Map<String, Object> resultMap = BytesToPojo.read(byteBuffer, outerDescriptor);
+        Map<String, Object> resultMap = ProtoReader.read(byteBuffer, outerDescriptor);
 
         // Verify the result
         assertEquals(100, resultMap.get("outer_int_field"));
@@ -180,7 +180,7 @@ public class BytesToPojoTest extends TestCase {
         ByteBuffer byteBuffer = ByteBuffer.wrap(dynamicMessageBuilder.build().toByteArray());
 
         // Convert the byte buffer to a map using the descriptor
-        Map<String, Object> resultMap = BytesToPojo.read(byteBuffer, descriptor);
+        Map<String, Object> resultMap = ProtoReader.read(byteBuffer, descriptor);
 
         // Verify the result
         assertEquals(123, resultMap.get("int32_field"));
@@ -231,7 +231,7 @@ public class BytesToPojoTest extends TestCase {
         ByteBuffer byteBuffer = ByteBuffer.wrap(dynamicMessageBuilder.build().toByteArray());
 
         // Convert the byte buffer to a map using the descriptor
-        Map<String, Object> resultMap = BytesToPojo.read(byteBuffer, descriptor);
+        Map<String, Object> resultMap = ProtoReader.read(byteBuffer, descriptor);
 
         // Verify the result
         assertEquals("ENUM_VALUE_2", resultMap.get("enum_field"));
