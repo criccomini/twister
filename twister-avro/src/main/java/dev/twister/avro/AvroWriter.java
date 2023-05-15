@@ -125,6 +125,15 @@ public class AvroWriter {
         }
     }
 
+    public ByteBuffer writeAvro(Map<String, Object> object, String recordName) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
+        MapDatumWriter writer = new MapDatumWriter(new AvroSchemaInferrer().schema(object, recordName));
+        writer.write(object, encoder);
+        encoder.flush();
+        return ByteBuffer.wrap(outputStream.toByteArray());
+    }
+
     public ByteBuffer writeAvro(Map<String, Object> object, Schema schema) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
