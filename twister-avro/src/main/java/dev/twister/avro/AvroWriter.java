@@ -148,7 +148,7 @@ public class AvroWriter {
         }
     }
 
-    public ByteBuffer writeAvro(Map<String, Object> object, String recordName) throws IOException {
+    public ByteBuffer write(Map<String, Object> object, String recordName) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
         MapDatumWriter writer = new MapDatumWriter(new AvroSchemaInferrer().schema(object, recordName));
@@ -157,7 +157,7 @@ public class AvroWriter {
         return ByteBuffer.wrap(outputStream.toByteArray());
     }
 
-    public ByteBuffer writeAvro(Map<String, Object> object, Schema schema) throws IOException {
+    public ByteBuffer write(Map<String, Object> object, Schema schema) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
         MapDatumWriter writer = new MapDatumWriter(schema);
