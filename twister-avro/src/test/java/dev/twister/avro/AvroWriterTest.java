@@ -216,13 +216,13 @@ public class AvroWriterTest extends TestCase {
 
         // Manually create expected schema
         Schema expectedSchema = SchemaBuilder.record("TestSchema").fields()
-                .name("booleanField").type().nullable().booleanType().noDefault()
-                .name("doubleField").type().nullable().doubleType().noDefault()
-                .name("floatField").type().nullable().floatType().noDefault()
-                .name("intField").type().nullable().intType().noDefault()
-                .name("longField").type().nullable().longType().noDefault()
+                .name("booleanField").type().unionOf().nullType().and().booleanType().endUnion().noDefault()
+                .name("doubleField").type().unionOf().nullType().and().doubleType().endUnion().noDefault()
+                .name("floatField").type().unionOf().nullType().and().floatType().endUnion().noDefault()
+                .name("intField").type().unionOf().nullType().and().intType().endUnion().noDefault()
+                .name("longField").type().unionOf().nullType().and().longType().endUnion().noDefault()
                 .name("nullField").type().nullType().noDefault()
-                .name("stringField").type().nullable().stringType().noDefault()
+                .name("stringField").type().unionOf().nullType().and().stringType().endUnion().noDefault()
                 .endRecord();
 
         DatumReader<GenericRecord> reader = new SpecificDatumReader<>(expectedSchema);
@@ -236,6 +236,6 @@ public class AvroWriterTest extends TestCase {
         assertEquals(123456789L, record.get("longField"));
         assertEquals(3.14f, (float)record.get("floatField"), 0.001);
         assertEquals(2.718281828, (double)record.get("doubleField"), 0.001);
-        assertEquals(null, record.get("nullField"));
+        assertNull(record.get("nullField"));
     }
 }
