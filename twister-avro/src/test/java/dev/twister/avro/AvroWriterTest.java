@@ -44,7 +44,7 @@ public class AvroWriterTest extends TestCase {
         recordMap.put("stringField", "Hello, World!");
         recordMap.put("bytesField", ByteBuffer.wrap(new byte[]{1, 2, 3, 4, 5}));
 
-        ByteBuffer byteBuffer = new AvroWriter().writeAvro(recordMap, schema);
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
 
         // Read data back using a GenericDatumReader and Decoder
         GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
@@ -91,7 +91,7 @@ public class AvroWriterTest extends TestCase {
         recordMap.put("stringField", "Hello, World!");
         recordMap.put("bytesField", ByteBuffer.wrap(new byte[]{1, 2, 3, 4, 5}));
 
-        ByteBuffer byteBuffer = new AvroWriter().writeAvro(recordMap, schema);
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
         Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
 
         assertEquals(recordMap, resultMap);
@@ -104,7 +104,7 @@ public class AvroWriterTest extends TestCase {
         Map<String, Object> recordMap = new HashMap<>();
         recordMap.put("enumField", "GREEN");
 
-        ByteBuffer byteBuffer = new AvroWriter().writeAvro(recordMap, schema);
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
 
         GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
         Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
@@ -120,7 +120,7 @@ public class AvroWriterTest extends TestCase {
         Map<String, Object> recordMap = new HashMap<>();
         recordMap.put("arrayField", Arrays.asList("Aa", "Bb", "Cc"));
 
-        ByteBuffer byteBuffer = new AvroWriter().writeAvro(recordMap, schema);
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
 
         GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
         Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
@@ -142,7 +142,7 @@ public class AvroWriterTest extends TestCase {
         map.put("three", 3);
         recordMap.put("mapField", map);
 
-        ByteBuffer byteBuffer = new AvroWriter().writeAvro(recordMap, schema);
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
 
         GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
         Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
@@ -161,7 +161,7 @@ public class AvroWriterTest extends TestCase {
         Map<String, Object> recordMap = new HashMap<>();
         recordMap.put("unionField", "example");
 
-        ByteBuffer byteBuffer = new AvroWriter().writeAvro(recordMap, schema);
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
 
         GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
         Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
@@ -185,7 +185,7 @@ public class AvroWriterTest extends TestCase {
         recordMap.put("unionField", "example");
         recordMap.put("fixedField", ByteBuffer.wrap(new byte[]{1, 2, 3, 4}));
 
-        ByteBuffer byteBuffer = new AvroWriter().writeAvro(recordMap, schema);
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
         Map<String, Object> result = new AvroReader().read(byteBuffer, schema);
 
         assertEquals("GREEN", result.get("enumField"));
@@ -212,7 +212,7 @@ public class AvroWriterTest extends TestCase {
 
         // Write the map to Avro
         AvroWriter avroWriter = new AvroWriter();
-        ByteBuffer avroData = avroWriter.writeAvro(testMap, "TestSchema");
+        ByteBuffer avroData = avroWriter.write(testMap, "TestSchema");
 
         // Manually create expected schema
         Schema expectedSchema = SchemaBuilder.record("TestSchema").fields()
