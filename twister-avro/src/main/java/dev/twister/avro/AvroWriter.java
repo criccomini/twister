@@ -86,19 +86,9 @@ public class AvroWriter {
                     break;
                 case UNION:
                     List<Schema> unionSchemas = schema.getTypes();
-                    boolean isWritten = false;
-                    for (Schema unionSchema : unionSchemas) {
-                        try {
-                            writeObject(value, unionSchema, out);
-                            isWritten = true;
-                            break;
-                        } catch (Exception e) {
-                            // Ignore exception and try next schema
-                        }
-                    }
-                    if (!isWritten) {
-                        throw new IOException("Invalid union value: " + value + " for schema: " + schema);
-                    }
+                    int matchingSchemaIndex = getMatchingSchemaIndex(value, unionSchemas);
+                    out.writeIndex(matchingSchemaIndex);
+                    writeObject(value, unionSchemas.get(matchingSchemaIndex), out);
                     break;
                 case FIXED:
                     ByteBuffer fixedValueBuffer = (ByteBuffer) value;
@@ -122,6 +112,39 @@ public class AvroWriter {
                     writeObject(value, field.schema(), out);
                 }
             }
+        }
+
+        private Class<?> getExpectedClass(Schema schema) {
+            switch (schema.getType()) {
+                case BOOLEAN: return Boolean.class;
+                case INT:     return Integer.class;
+                case LONG:    return Long.class;
+                case FLOAT:   return Float.class;
+                case DOUBLE:  return Double.class;
+                case ENUM:
+                case STRING:  return String.class;
+                case FIXED:
+                case BYTES:   return ByteBuffer.class;
+                case ARRAY:   return List.class;
+                case RECORD:
+                case MAP:     return Map.class;
+                case NULL:    return null;
+                default:      throw new UnsupportedOperationException("Unsupported type: " + schema.getType());
+            }
+        }
+
+        private int getMatchingSchemaIndex(Object value, List<Schema> unionSchemas) throws IOException {
+            for (int i = 0; i < unionSchemas.size(); i++) {
+                Schema unionSchema = unionSchemas.get(i);
+                Class<?> expectedClass = getExpectedClass(unionSchema);
+                if (value == null && expectedClass == null) {
+                    return i;
+                }
+                if (value != null && expectedClass != null && expectedClass.isInstance(value)) {
+                    return i;
+                }
+            }
+            throw new IOException("Invalid union value: " + value + " for schema: " + unionSchemas);
         }
     }
 
