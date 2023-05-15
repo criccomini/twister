@@ -6,8 +6,6 @@ Twister does some trippy stuff:
 
 * Avro Record bytes ↔ Map POJO
 * Protobuf Message bytes ↔ Map POJO
-* Avro Record → Map wrapper
-* Protobuf Message → Map wrapper
 * Map POJO → Avro Schema
 * Map POJO → Protobuf Descriptor
 
@@ -24,6 +22,8 @@ Infer Avro Schemas and Protobuf Descriptors.
 * Avro default support
 * Avro logical type support
 * Protobuf WKT support
+* Avro Record → Map wrapper
+* Protobuf Message → Map wrapper
 
 ## A GPT Experiment
 
