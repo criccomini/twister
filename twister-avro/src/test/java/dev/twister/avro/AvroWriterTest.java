@@ -109,6 +109,38 @@ public class AvroWriterTest extends TestCase {
         recordMap.put("fixedField", ByteBuffer.wrap(new byte[]{1, 2, 3, 4}));
 
         ByteBuffer byteBuffer = new AvroWriter().writeAvro(recordMap, schema);
+
+        GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
+        GenericRecord genericRecord = datumReader.read(null, decoder);
+
+        assertEquals("GREEN", genericRecord.get("enumField").toString());
+        assertEquals(Arrays.asList("Aa", "Bb", "Cc"), genericRecord.get("arrayField"));
+        assertEquals(map, genericRecord.get("mapField"));
+        assertEquals("example", genericRecord.get("unionField").toString());
+        ByteBuffer decodedBytes = (ByteBuffer) genericRecord.get("fixedField");
+        assertEquals(4, decodedBytes.remaining());
+        for (int i = 1; i <= 4; i++) {
+            assertEquals(i, decodedBytes.get());
+        }
+    }
+
+    public void testBidirectionalComplexTypes() throws Exception {
+        String schemaJson = "{\"type\":\"record\",\"name\":\"TestComplexTypes\",\"fields\":[{\"name\":\"enumField\",\"type\":{\"type\":\"enum\",\"name\":\"TestEnum\",\"symbols\":[\"RED\",\"GREEN\",\"BLUE\"]}},{\"name\":\"arrayField\",\"type\":{\"type\":\"array\",\"items\":\"string\"}},{\"name\":\"mapField\",\"type\":{\"type\":\"map\",\"values\":\"int\"}},{\"name\":\"unionField\",\"type\":[\"null\",\"string\"]},{\"name\":\"fixedField\",\"type\":{\"type\":\"fixed\",\"name\":\"TestFixed\",\"size\":4}}]}";
+        Schema schema = new Schema.Parser().parse(schemaJson);
+
+        Map<String, Object> recordMap = new HashMap<>();
+        recordMap.put("enumField", "GREEN");
+        recordMap.put("arrayField", Arrays.asList("Aa", "Bb", "Cc"));
+        Map<String, Integer> map = new HashMap<>();
+        map.put("one", 1);
+        map.put("two", 2);
+        map.put("three", 3);
+        recordMap.put("mapField", map);
+        recordMap.put("unionField", "example");
+        recordMap.put("fixedField", ByteBuffer.wrap(new byte[]{1, 2, 3, 4}));
+
+        ByteBuffer byteBuffer = new AvroWriter().writeAvro(recordMap, schema);
         Map<String, Object> result = new AvroReader().read(byteBuffer, schema);
 
         assertEquals("GREEN", result.get("enumField"));
