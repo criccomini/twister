@@ -1,7 +1,6 @@
 package dev.twister.proto;
 
 import com.github.os72.protobuf.dynamic.DynamicSchema;
-
 import com.github.os72.protobuf.dynamic.EnumDefinition;
 import com.github.os72.protobuf.dynamic.MessageDefinition;
 import com.google.protobuf.Descriptors;
@@ -14,7 +13,6 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
-import static org.junit.Assert.*;
 
 public class ProtoReaderTest extends TestCase {
     public void testRead() throws Exception {
