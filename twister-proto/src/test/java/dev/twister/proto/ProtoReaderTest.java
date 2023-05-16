@@ -10,6 +10,7 @@ import com.google.protobuf.DynamicMessage;
 
 import junit.framework.TestCase;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
@@ -186,17 +187,17 @@ public class ProtoReaderTest extends TestCase {
         assertEquals(123, resultMap.get("int32_field"));
         assertEquals(1234567890123456789L, resultMap.get("int64_field"));
         assertEquals(456L, resultMap.get("uint32_field"));
-        assertEquals(Long.parseUnsignedLong("9876543210987654321"), resultMap.get("uint64_field"));
+        assertEquals(new BigInteger("9876543210987654321"), resultMap.get("uint64_field"));
         assertEquals(-789, resultMap.get("sint32_field"));
         assertEquals(-1234567890987654321L, resultMap.get("sint64_field"));
         assertEquals(true, resultMap.get("bool_field"));
-        assertEquals(1234567890L, resultMap.get("fixed64_field"));
+        assertEquals(new BigInteger("1234567890"), resultMap.get("fixed64_field"));
         assertEquals(-1234567890L, resultMap.get("sfixed64_field"));
         assertEquals(1234.5678, resultMap.get("double_field"));
-        assertEquals(12345678, resultMap.get("fixed32_field"));
+        assertEquals(12345678L, resultMap.get("fixed32_field"));
         assertEquals(-12345678, resultMap.get("sfixed32_field"));
         assertEquals(12.34f, resultMap.get("float_field"));
-        assertArrayEquals(new byte[]{1, 2, 3, 4, 5}, (byte[]) resultMap.get("bytes_field"));
+        assertEquals(ByteBuffer.wrap(new byte[]{1, 2, 3, 4, 5}), resultMap.get("bytes_field"));
     }
 
     public void testEnumType() throws Exception {
