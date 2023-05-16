@@ -1,7 +1,6 @@
 package dev.twister.avro;
 
 import junit.framework.TestCase;
-import org.junit.Assert;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
