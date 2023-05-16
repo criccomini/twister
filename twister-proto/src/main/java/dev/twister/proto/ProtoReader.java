@@ -5,6 +5,7 @@ import com.google.protobuf.Descriptors.Descriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.OneofDescriptor;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -68,6 +69,14 @@ public class ProtoReader {
                             }
                             value = enumValueDescriptor.getName();
                             break;
+                        case UINT32:
+                        case FIXED32:
+                            value = rawValue & 0xFFFFFFFFL; // convert to long treating as unsigned
+                            break;
+                        case UINT64:
+                        case FIXED64:
+                            value = new BigInteger(Long.toUnsignedString(rawValue)); // convert to BigInteger treating as unsigned
+                            break;
                         default:
                             value = rawValue;
                             break;
@@ -77,12 +86,20 @@ public class ProtoReader {
                     break;
                 case 1: // Fixed64, SFixed64, Double
                     long rawFixed64Value = inputBuffer.order(ByteOrder.LITTLE_ENDIAN).getLong();
-                    if (fieldDescriptor.getType() == FieldDescriptor.Type.DOUBLE) {
-                        addToResultMap(resultMap, fieldName, Double.longBitsToDouble(rawFixed64Value), fieldDescriptor.isRepeated(), isOneof);
-                    } else {
-                        // Fixed64 and SFixed64 are both encoded as 64-bit integers
-                        addToResultMap(resultMap, fieldName, rawFixed64Value, fieldDescriptor.isRepeated(), isOneof);
+                    switch (fieldDescriptor.getType()) {
+                        case DOUBLE:
+                            value = Double.longBitsToDouble(rawFixed64Value);
+                            break;
+                        case FIXED64:
+                            value = BigInteger.valueOf(rawFixed64Value);
+                            break;
+                        case SFIXED64:
+                            value = rawFixed64Value;
+                            break;
+                        default:
+                            throw new UnsupportedOperationException("Unsupported type: " + fieldDescriptor.getType());
                     }
+                    addToResultMap(resultMap, fieldName, value, fieldDescriptor.isRepeated(), isOneof);
                     break;
                 case 2: // Length-Delimited
                     // Check if the field is a map field
@@ -100,7 +117,6 @@ public class ProtoReader {
                         Object mapKey = mapEntry.get(keyField.getName());
                         Object mapValue = mapEntry.get(valueField.getName());
 
-                        @SuppressWarnings("unchecked")
                         Map<Object, Object> map = (Map<Object, Object>) resultMap.computeIfAbsent(fieldName, k -> new HashMap<>());
                         map.put(mapKey, mapValue);
                     } else {
@@ -110,6 +126,9 @@ public class ProtoReader {
                         if (fieldDescriptor.getType() == FieldDescriptor.Type.STRING) {
                             String string = new String(bytes, StandardCharsets.UTF_8);
                             addToResultMap(resultMap, fieldName, string, fieldDescriptor.isRepeated(), isOneof);
+                        } else if (fieldDescriptor.getType() == FieldDescriptor.Type.BYTES) {
+                            ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+                            addToResultMap(resultMap, fieldName, byteBuffer, fieldDescriptor.isRepeated(), isOneof);
                         } else if (!isOneof && fieldDescriptor.getType() == FieldDescriptor.Type.MESSAGE) {
                             ByteBuffer nestedByteBuffer = ByteBuffer.wrap(bytes);
                             Map<String, Object> nestedMessage = read(nestedByteBuffer, fieldDescriptor.getMessageType());
@@ -121,12 +140,20 @@ public class ProtoReader {
                     break;
                 case 5: // Fixed32, SFixed32, Float
                     int rawFixed32Value = inputBuffer.order(ByteOrder.LITTLE_ENDIAN).getInt();
-                    if (fieldDescriptor.getType() == FieldDescriptor.Type.FLOAT) {
-                        addToResultMap(resultMap, fieldName, Float.intBitsToFloat(rawFixed32Value), fieldDescriptor.isRepeated(), isOneof);
-                    } else {
-                        // Fixed32 and SFixed32 are both encoded as 32-bit integers
-                        addToResultMap(resultMap, fieldName, rawFixed32Value, fieldDescriptor.isRepeated(), isOneof);
+                    switch (fieldDescriptor.getType()) {
+                        case FLOAT:
+                            value = Float.intBitsToFloat(rawFixed32Value);
+                            break;
+                        case FIXED32:
+                            value = Long.valueOf(rawFixed32Value);
+                            break;
+                        case SFIXED32:
+                            value = rawFixed32Value;
+                            break;
+                        default:
+                            throw new UnsupportedOperationException("Unsupported type: " + fieldDescriptor.getType());
                     }
+                    addToResultMap(resultMap, fieldName, value, fieldDescriptor.isRepeated(), isOneof);
                     break;
                 default:
                     throw new UnsupportedOperationException("Unsupported wire type: " + wireType);
