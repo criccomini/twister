@@ -81,3 +81,5 @@ Despite its simplicity and flexibility, Twister attempts to maintain decent perf
 ## 🤖 GPT-4 Generated
 
 Twister is written almost entirely by [OpenAI's ChatGPT 4 LLM](https://openai.com/product/gpt-4). This includes not only Twister's code, but its tests, docs, commit messages, and even this README.
+
+Check out the [AI at the Helm: Building an Entire Open Source Project With GPT-4](https://cnr.sh/essays/ai-helm-building-open-source-project-gpt-4) to learn more about building Twister with GPT-4.
