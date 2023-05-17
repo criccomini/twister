@@ -4,12 +4,12 @@ Twister converts [Avro](https://avro.apache.org/) and [Protobuf](https://protobu
 
 Twister does some trippy stuff:
 
-* Avro Record bytes ↔ Map POJOs
-* Protobuf Message bytes ↔ Map POJOs
-* Map POJOs → Avro Schema
-* Map POJOs → Protobuf Descriptor
+* Avro Record bytes ↔️ Map POJOs
+* Protobuf Message bytes ↔️ Map POJOs
+* Map POJOs ➡️ Avro Schema
+* Map POJOs ➡️ Protobuf Descriptor
 
-**Note**: Twister also allows you to convert between Avro/Proto and JSON objects using [Jackson's ObjectMapper](https://github.com/FasterXML/jackson-databind), which can convert map POJOs ↔ JSON.
+**Note**: Twister also allows you to convert between Avro/Proto and JSON objects using [Jackson's ObjectMapper](https://github.com/FasterXML/jackson-databind), which can convert map POJOs ↔️ JSON.
 
 ## Usage
 
@@ -73,9 +73,9 @@ Despite its simplicity and flexibility, Twister attempts to maintain decent perf
 * Avro default support
 * Avro logical type support
 * Protobuf WKT support
-* Avro Record → Map wrapper
-* Protobuf Message → Map wrapper
-* .proto → Protobuf Descriptor converter
+* Avro Record ➡️ Map wrapper
+* Protobuf Message ➡️ Map wrapper
+* .proto ➡️ Protobuf Descriptor converter
 
 ## 🤖 GPT-4 Generated
 
