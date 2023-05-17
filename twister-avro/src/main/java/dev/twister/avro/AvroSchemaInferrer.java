@@ -6,21 +6,53 @@ import org.apache.avro.SchemaBuilder;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+/**
+ * A utility class to infer Avro schema from Java objects.
+ */
 public class AvroSchemaInferrer {
+
+    /**
+     * Flag indicating whether maps should be treated as records during Avro schema inference.
+     * Default value is {@code true}.
+     */
     private final boolean mapAsRecord;
 
+    /**
+     * Creates an AvroSchemaInferrer with the default behavior of treating maps as records.
+     */
     public AvroSchemaInferrer() {
         this(true);
     }
 
+    /**
+     * Creates an AvroSchemaInferrer.
+     *
+     * @param mapAsRecord A flag to indicate whether maps should be treated as records.
+     */
     public AvroSchemaInferrer(boolean mapAsRecord) {
         this.mapAsRecord = mapAsRecord;
     }
 
+    /**
+     * Infers an Avro schema from a given Java Map and a record name.
+     *
+     * @param object The Java Map to infer the schema from.
+     * @param recordName The name of the record.
+     * @return The inferred Avro schema.
+     */
     public Schema schema(Map<String, Object> object, String recordName) {
         return getSchemaBasedOnObjectType(object, recordName, null);
     }
 
+    /**
+     * Infers an Avro schema based on the type of the given object.
+     *
+     * @param value The object to infer the schema from.
+     * @param fieldName The name of the field for the object.
+     * @param parentName The name of the parent field, or null if there's no parent.
+     * @return The inferred Avro schema.
+     * @throws IllegalArgumentException If the object's type is unsupported or if the object is an empty array.
+     */
     private Schema getSchemaBasedOnObjectType(Object value, String fieldName, String parentName) {
         Schema schema;
         String finalRecordName = (parentName != null) ? parentName + "_" + fieldName : fieldName;
@@ -68,6 +100,13 @@ public class AvroSchemaInferrer {
         return schema;
     }
 
+    /**
+     * Handles the inference of an Avro schema for a map treated as a record.
+     *
+     * @param sortedMap The sorted map to infer the schema from.
+     * @param finalRecordName The final name of the record.
+     * @return The inferred Avro schema.
+     */
     private Schema handleMapAsRecord(Map<String, Object> sortedMap, String finalRecordName) {
         SchemaBuilder.FieldAssembler<Schema> fields = SchemaBuilder.record(finalRecordName).fields();
 
@@ -79,6 +118,13 @@ public class AvroSchemaInferrer {
         return fields.endRecord();
     }
 
+    /**
+     * Handles the inference of an Avro schema for a map treated as a map.
+     *
+     * @param sortedMap The sorted map to infer the schema from.
+     * @param finalRecordName The final name of the record.
+     * @return The inferred Avro schema.
+     */
     private Schema handleMapAsMap(Map<String, Object> sortedMap, String finalRecordName) {
         Set<Schema> fieldSchemas = new HashSet<>();
         Set<String> schemaTypes = new HashSet<>();
@@ -100,6 +146,12 @@ public class AvroSchemaInferrer {
         return SchemaBuilder.map().values(union.endUnion());
     }
 
+    /**
+     * Returns a nullable version of the given schema.
+     *
+     * @param schema The schema to make nullable.
+     * @return The nullable schema.
+     */
     private Schema nullableSchema(Schema schema) {
         if (schema.getType() != Schema.Type.NULL) {
             return SchemaBuilder.unionOf().nullType().and().type(schema).endUnion();

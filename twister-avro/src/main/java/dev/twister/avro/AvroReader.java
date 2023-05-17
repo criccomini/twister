@@ -11,12 +11,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A utility class to read Avro-encoded data into Java Map objects.
+ */
 public class AvroReader {
+
+    /**
+     * Reads Avro-encoded data from a ByteBuffer using a provided schema.
+     *
+     * @param inputBuffer The ByteBuffer containing the Avro-encoded data.
+     * @param schema The Avro schema that describes the data structure.
+     * @return A Map representing the Avro data.
+     * @throws IOException If there is a problem reading from the ByteBuffer.
+     */
     public Map<String, Object> read(ByteBuffer inputBuffer, Schema schema) throws IOException {
         BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(inputBuffer.array(), null);
         return (Map<String, Object>) readBasedOnSchema(decoder, schema);
     }
 
+    /**
+     * Reads Avro-encoded data from a BinaryDecoder based on a provided schema.
+     *
+     * @param decoder The BinaryDecoder to read data from.
+     * @param schema The Avro schema that describes the data structure.
+     * @return An Object representing the Avro data.
+     * @throws IOException If there is a problem reading from the BinaryDecoder.
+     */
     private Object readBasedOnSchema(BinaryDecoder decoder, Schema schema) throws IOException {
         switch (schema.getType()) {
             case RECORD:
@@ -62,6 +82,15 @@ public class AvroReader {
         }
     }
 
+    /**
+     * Reads a primitive value from a BinaryDecoder based on a provided schema type.
+     *
+     * @param decoder The BinaryDecoder to read data from.
+     * @param type The Avro schema type of the primitive value.
+     * @return An Object representing the Avro primitive value.
+     * @throws IOException If there is a problem reading from the BinaryDecoder.
+     * @throws IllegalArgumentException If the schema type is unsupported.
+     */
     private Object readPrimitive(BinaryDecoder decoder, Schema.Type type) throws IOException {
         switch (type) {
             case BOOLEAN:

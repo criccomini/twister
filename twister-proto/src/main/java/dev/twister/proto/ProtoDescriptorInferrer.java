@@ -8,7 +8,19 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A utility class to infer a Protocol Buffers message descriptor from a Map of objects.
+ */
 public class ProtoDescriptorInferrer {
+
+    /**
+     * Infers a Protocol Buffers message descriptor from a Map of objects and assigns it a message name.
+     *
+     * @param object The Map of objects to infer the descriptor from.
+     * @param messageName The name to assign to the message in the descriptor.
+     * @return The inferred Protocol Buffers message descriptor.
+     * @throws RuntimeException If there is an error validating the inferred descriptor.
+     */
     public Descriptors.Descriptor descriptor(Map<String, Object> object, String messageName) {
         DescriptorProtos.FileDescriptorProto.Builder fileDescriptorBuilder = DescriptorProtos.FileDescriptorProto.newBuilder();
         DescriptorProtos.DescriptorProto.Builder messageBuilder = DescriptorProtos.DescriptorProto.newBuilder();
@@ -57,6 +69,13 @@ public class ProtoDescriptorInferrer {
         }
     }
 
+    /**
+     * Infers the Protocol Buffers field type from an Object.
+     *
+     * @param value The object to infer the field type from.
+     * @return The inferred Protocol Buffers field type.
+     * @throws IllegalArgumentException If the object type is unsupported.
+     */
     private Descriptors.FieldDescriptor.Type inferFieldType(Object value) {
         if (value instanceof Integer) {
             return Descriptors.FieldDescriptor.Type.INT32;
