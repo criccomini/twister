@@ -12,6 +12,18 @@ import java.util.Map;
 public class ProtoWriter {
 
     /**
+     * Writes a given object map into a ByteBuffer using the specified message name.
+     * It uses a new instance of ProtoDescriptorInferrer to generate the descriptor.
+     *
+     * @param object The Map representing the Protocol Buffers message.
+     * @param messageName The name of the Protocol Buffers message.
+     * @return A ByteBuffer containing the Protocol Buffers message.
+     */
+    public ByteBuffer write(Map<String, Object> object, String messageName) {
+        return write(object, new ProtoDescriptorInferrer().descriptor(object, messageName));
+    }
+
+    /**
      * Converts a Map into a Protocol Buffers message and writes it to a ByteBuffer.
      *
      * @param object The Map representing the Protocol Buffers message.

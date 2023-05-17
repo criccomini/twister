@@ -9,10 +9,7 @@ import junit.framework.TestCase;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ProtoWriterTest extends TestCase {
     public void testWrite() throws Exception {
@@ -175,5 +172,38 @@ public class ProtoWriterTest extends TestCase {
         // Assert that the values of the nested message field are as expected
         DynamicMessage nestedMessage = (DynamicMessage) dynamicMessage.getField(descriptor.findFieldByName("nested_message_field"));
         assertEquals(42, nestedMessage.getField(nestedMessage.getDescriptorForType().findFieldByName("nested_int32_field")));
+    }
+
+    public void testWriteWithInferredDescriptor() throws Exception {
+        // Define a simple message
+        MessageDefinition msgDef = MessageDefinition.newBuilder("TestMessage")
+                .addField("required", "int32", "id", 1)
+                .addField("optional", "string", "name", 2)
+                .build();
+
+        // Create a dynamic schema
+        DynamicSchema schema = DynamicSchema.newBuilder()
+                .setName("TestSchema.proto")
+                .addMessageDefinition(msgDef)
+                .build();
+
+        // Create a map with primitive values
+        Map<String, Object> object = new LinkedHashMap<>();
+        object.put("id", 42);
+        object.put("name", "Test");
+
+        // Create ProtoWriter instance and write the map into a ByteBuffer
+        ByteBuffer outputBuffer = new ProtoWriter().write(object, "TestMessage");
+
+        // Parse the ByteBuffer back into a DynamicMessage
+        byte[] outputBytes = new byte[outputBuffer.remaining()];
+        outputBuffer.get(outputBytes);
+
+        Descriptor descriptor = schema.getMessageDescriptor("TestMessage");
+        DynamicMessage dynamicMessage = DynamicMessage.parseFrom(descriptor, outputBytes);
+
+        // Assert that the values of the message fields are as expected
+        assertEquals(42, dynamicMessage.getField(descriptor.findFieldByName("id")));
+        assertEquals("Test", dynamicMessage.getField(descriptor.findFieldByName("name")));
     }
 }
