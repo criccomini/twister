@@ -18,25 +18,29 @@ public class ProtoDescriptorInferrer {
         messageBuilder.setName(messageName);
 
         for (Map.Entry<String, Object> entry : object.entrySet()) {
-            Descriptors.FieldDescriptor.Type fieldType;
             String fieldName = entry.getKey();
             Object fieldValue = entry.getValue();
             DescriptorProtos.FieldDescriptorProto.Builder fieldBuilder = DescriptorProtos.FieldDescriptorProto.newBuilder();
 
-            // Set field name and type
+            // Set field name and number
             fieldBuilder.setName(fieldName);
             fieldBuilder.setNumber(fieldNumber++);
 
             if (fieldValue instanceof List) {
                 fieldBuilder.setLabel(DescriptorProtos.FieldDescriptorProto.Label.LABEL_REPEATED);
                 // assuming all elements in the list are of the same type
-                fieldType = inferFieldType(((List<?>) fieldValue).get(0));
+                Descriptors.FieldDescriptor.Type fieldType = inferFieldType(((List<?>) fieldValue).get(0));
+                fieldBuilder.setType(fieldType.toProto());
+            } else if (fieldValue instanceof Map) {
+                DescriptorProtos.DescriptorProto nestedMessage = descriptor((Map<String, Object>) fieldValue, messageName + "_" + fieldName).toProto();
+                messageBuilder.addNestedType(nestedMessage);
+                fieldBuilder.setTypeName(nestedMessage.getName());
+                fieldBuilder.setLabel(DescriptorProtos.FieldDescriptorProto.Label.LABEL_OPTIONAL);
             } else {
                 fieldBuilder.setLabel(DescriptorProtos.FieldDescriptorProto.Label.LABEL_OPTIONAL);
-                fieldType = inferFieldType(fieldValue);
+                Descriptors.FieldDescriptor.Type fieldType = inferFieldType(fieldValue);
+                fieldBuilder.setType(fieldType.toProto());
             }
-
-            fieldBuilder.setType(fieldType.toProto());
 
             // Add field to the message
             messageBuilder.addField(fieldBuilder.build());
@@ -74,6 +78,8 @@ public class ProtoDescriptorInferrer {
             return Descriptors.FieldDescriptor.Type.BYTES;
         } else if (value instanceof Float) {
             return Descriptors.FieldDescriptor.Type.FLOAT;
+        } else if (value instanceof Map) {
+            return Descriptors.FieldDescriptor.Type.MESSAGE;
         } else {
             throw new IllegalArgumentException("Unsupported field value type: " + value.getClass().getName());
         }

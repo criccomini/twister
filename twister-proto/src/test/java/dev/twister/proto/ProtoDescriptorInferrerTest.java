@@ -50,7 +50,7 @@ public class ProtoDescriptorInferrerTest extends TestCase {
         assertEquals(expectedDescriptor.toProto(), descriptor.toProto());
     }
 
-    public void testInferRepeatedFieldType() throws Exception {
+    public void testRepeatedFields() throws Exception {
         Map<String, Object> object = new LinkedHashMap<>();
         List<Integer> intList = Arrays.asList(32, 33, 34);
         object.put("fieldRepeated", intList);
@@ -73,4 +73,48 @@ public class ProtoDescriptorInferrerTest extends TestCase {
         assertEquals(expectedDescriptor.toProto(), descriptor.toProto());
     }
 
+    public void testNestedMessages() throws Exception {
+        ProtoDescriptorInferrer inferrer = new ProtoDescriptorInferrer();
+
+        Map<String, Object> nestedObject = new LinkedHashMap<>();
+        nestedObject.put("nestedFieldInt", Integer.valueOf(32));
+
+        Map<String, Object> nestedNestedObject = new LinkedHashMap<>();
+        nestedNestedObject.put("nestedNestedFieldStr", "nested string");
+        nestedObject.put("nestedNestedMessage", nestedNestedObject);
+
+        Map<String, Object> object = new LinkedHashMap<>();
+        object.put("fieldStr", "string");
+        object.put("nestedMessage", nestedObject);
+
+        Descriptors.Descriptor descriptor = inferrer.descriptor(object, "TestMessage");
+
+        // Create expected schema using DynamicSchema
+        DynamicSchema.Builder schemaBuilder = DynamicSchema.newBuilder();
+        schemaBuilder.setName("TestMessage.proto");
+
+        MessageDefinition nestedNestedMsgDef = MessageDefinition.newBuilder("TestMessage_nestedMessage_nestedNestedMessage")
+                .addField("optional", "string", "nestedNestedFieldStr", 1)
+                .build();
+
+        MessageDefinition nestedMsgDef = MessageDefinition.newBuilder("TestMessage_nestedMessage")
+                .addField("optional", "int32", "nestedFieldInt", 1)
+                .addMessageDefinition(nestedNestedMsgDef)
+                .addField("optional", "TestMessage_nestedMessage_nestedNestedMessage", "nestedNestedMessage", 2)
+                .build();
+
+        MessageDefinition msgDef = MessageDefinition.newBuilder("TestMessage")
+                .addField("optional", "string", "fieldStr", 1)
+                .addMessageDefinition(nestedMsgDef)
+                .addField("optional", "TestMessage_nestedMessage", "nestedMessage", 2)
+                .build();
+
+        schemaBuilder.addMessageDefinition(msgDef);
+        DynamicSchema expectedSchema = schemaBuilder.build();
+
+        Descriptors.Descriptor expectedDescriptor = expectedSchema.getMessageDescriptor("TestMessage");
+
+        // Compare the descriptors
+        assertEquals(expectedDescriptor.toProto(), descriptor.toProto());
+    }
 }
