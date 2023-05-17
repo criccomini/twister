@@ -19,7 +19,7 @@ public class AvroSchemaInferrerTest extends TestCase {
         testMap.put("doubleField", 2.718281828);
         testMap.put("nullField", null);
 
-        Schema inferredSchema = new AvroSchemaInferrer().schema(testMap, "TestSchema");
+        Schema inferredSchema = new AvroSchemaInferrer().infer(testMap, "TestSchema");
 
         // Define expected schema with fields added in alphabetical order
         Schema expectedSchema = SchemaBuilder.record("TestSchema").fields()
@@ -40,7 +40,7 @@ public class AvroSchemaInferrerTest extends TestCase {
         AvroSchemaInferrer inferrer = new AvroSchemaInferrer();
         Map<String, Object> map = new HashMap<>();
         map.put("array", Arrays.asList(1, 2, 3));
-        Schema schema = inferrer.schema(map, "TestArray");
+        Schema schema = inferrer.infer(map, "TestArray");
         String expectedSchema = "{\"type\":\"record\",\"name\":\"TestArray\",\"fields\":[{\"name\":\"array\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[\"null\",\"int\"]}]}]}";
         assertEquals(expectedSchema, schema.toString());
     }
@@ -51,7 +51,7 @@ public class AvroSchemaInferrerTest extends TestCase {
         Map<String, Object> subMap = new HashMap<>();
         subMap.put("subField", "subValue");
         map.put("field", subMap);
-        Schema schema = inferrer.schema(map, "TestComplexMap");
+        Schema schema = inferrer.infer(map, "TestComplexMap");
         String expectedSchema = "{\"type\":\"record\",\"name\":\"TestComplexMap\",\"fields\":[{\"name\":\"field\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"TestComplexMap_field\",\"fields\":[{\"name\":\"subField\",\"type\":[\"null\",\"string\"]}]}]}]}";
         assertEquals(expectedSchema, schema.toString());
     }
@@ -67,7 +67,7 @@ public class AvroSchemaInferrerTest extends TestCase {
         AvroSchemaInferrer inferrer = new AvroSchemaInferrer(false);
 
         // Infer the Avro schema for the map
-        Schema schema = inferrer.schema(map, "TestRecord");
+        Schema schema = inferrer.infer(map, "TestRecord");
 
         // Check that the resulting schema is a map schema with a union value type
         assertEquals(Schema.Type.MAP, schema.getType());

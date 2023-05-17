@@ -20,7 +20,7 @@ public class ProtoWriter {
      * @return A ByteBuffer containing the Protocol Buffers message.
      */
     public ByteBuffer write(Map<String, Object> object, String messageName) {
-        return write(object, new ProtoDescriptorInferrer().descriptor(object, messageName));
+        return write(object, new ProtoDescriptorInferrer().infer(object, messageName));
     }
 
     /**
