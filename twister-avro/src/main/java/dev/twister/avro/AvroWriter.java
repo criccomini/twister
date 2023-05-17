@@ -12,7 +12,14 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * This class provides functionality to write Avro data based on the provided Avro schema and data.
+ */
 public class AvroWriter {
+
+    /**
+     * This class provides functionality to write Avro data based on a provided Avro schema and map data.
+     */
     public class MapDatumWriter implements DatumWriter<Map<String, Object>> {
         private Schema schema;
 
@@ -25,6 +32,14 @@ public class AvroWriter {
             this.schema = schema;
         }
 
+        /**
+         * Writes an object to the encoder output based on the provided Avro schema.
+         *
+         * @param value The object to be written.
+         * @param schema The Avro schema to use for writing.
+         * @param out The encoder output to write to.
+         * @throws IOException If an error occurs during writing.
+         */
         private void writeObject(Object value, Schema schema, Encoder out) throws IOException {
             switch (schema.getType()) {
                 case BOOLEAN:
@@ -114,6 +129,13 @@ public class AvroWriter {
             }
         }
 
+        /**
+         * Returns the expected Java class for the provided Avro schema.
+         *
+         * @param schema The Avro schema to get the expected class for.
+         * @return The expected Java class for the provided Avro schema.
+         * @throws UnsupportedOperationException If the schema type is unsupported.
+         */
         private Class<?> getExpectedClass(Schema schema) {
             switch (schema.getType()) {
                 case BOOLEAN: return Boolean.class;
@@ -133,6 +155,14 @@ public class AvroWriter {
             }
         }
 
+        /**
+         * Returns the index of the matching schema in the list of union schemas.
+         *
+         * @param value The value to match the schema with.
+         * @param unionSchemas The list of union schemas.
+         * @return The index of the matching schema in the list of union schemas.
+         * @throws IOException If no matching schema is found.
+         */
         private int getMatchingSchemaIndex(Object value, List<Schema> unionSchemas) throws IOException {
             for (int i = 0; i < unionSchemas.size(); i++) {
                 Schema unionSchema = unionSchemas.get(i);
@@ -148,6 +178,14 @@ public class AvroWriter {
         }
     }
 
+    /**
+     * Writes the given object to a ByteBuffer based on the inferred Avro schema.
+     *
+     * @param object The object to be written.
+     * @param recordName The name of the Avro record.
+     * @return A ByteBuffer containing the written Avro data.
+     * @throws IOException If an error occurs during writing.
+     */
     public ByteBuffer write(Map<String, Object> object, String recordName) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
@@ -157,6 +195,14 @@ public class AvroWriter {
         return ByteBuffer.wrap(outputStream.toByteArray());
     }
 
+    /**
+     * Writes the given object to a ByteBuffer based on the provided Avro schema.
+     *
+     * @param object The object to be written.
+     * @param schema The Avro schema to use for writing.
+     * @return A ByteBuffer containing the written Avro data.
+     * @throws IOException If an error occurs during writing.
+     */
     public ByteBuffer write(Map<String, Object> object, Schema schema) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);

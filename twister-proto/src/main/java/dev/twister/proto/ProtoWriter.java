@@ -6,12 +6,32 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
+/**
+ * A utility class for converting a Map into a Protocol Buffers message and writing it to a ByteBuffer.
+ */
 public class ProtoWriter {
+
+    /**
+     * Converts a Map into a Protocol Buffers message and writes it to a ByteBuffer.
+     *
+     * @param object The Map representing the Protocol Buffers message.
+     * @param descriptor The Descriptor of the Protocol Buffers message.
+     * @return A ByteBuffer containing the Protocol Buffers message.
+     * @throws RuntimeException If an unsupported field type is encountered.
+     */
     public ByteBuffer write(Map<String, Object> object, Descriptor descriptor) {
         DynamicMessage message = toMessage(object, descriptor);
         return ByteBuffer.wrap(message.toByteArray());
     }
 
+    /**
+     * Converts a Map into a DynamicMessage representing a Protocol Buffers message.
+     *
+     * @param object The Map representing the Protocol Buffers message.
+     * @param descriptor The Descriptor of the Protocol Buffers message.
+     * @return A DynamicMessage representing the Protocol Buffers message.
+     * @throws RuntimeException If an unsupported field type is encountered.
+     */
     public DynamicMessage toMessage(Map<String, Object> object, Descriptor descriptor) {
         DynamicMessage.Builder messageBuilder = DynamicMessage.newBuilder(descriptor);
 
@@ -33,6 +53,14 @@ public class ProtoWriter {
         return messageBuilder.build();
     }
 
+    /**
+     * Converts a Java object into a Protocol Buffers value according to the provided field descriptor.
+     *
+     * @param fieldDescriptor The descriptor of the field.
+     * @param value The Java object to convert.
+     * @return The converted Protocol Buffers value.
+     * @throws RuntimeException If an unsupported field type is encountered.
+     */
     private Object toProtobufValue(FieldDescriptor fieldDescriptor, Object value) {
         switch (fieldDescriptor.getType()) {
             case INT32:

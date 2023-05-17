@@ -14,8 +14,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A utility class for reading a Protocol Buffers message from a ByteBuffer and converting it into a Map.
+ */
 public class ProtoReader {
 
+    /**
+     * Reads a Protocol Buffers message from a ByteBuffer and converts it into a Map.
+     *
+     * @param inputBuffer The ByteBuffer containing the Protocol Buffers message.
+     * @param descriptor The Descriptor of the Protocol Buffers message.
+     * @return A Map representing the Protocol Buffers message.
+     * @throws IllegalArgumentException If an unknown field number or enum value is encountered.
+     * @throws UnsupportedOperationException If an unsupported wire type or field type is encountered.
+     */
     public static Map<String, Object> read(ByteBuffer inputBuffer, Descriptor descriptor) {
         Map<String, Object> resultMap = new HashMap<>();
 
@@ -163,6 +175,15 @@ public class ProtoReader {
         return resultMap;
     }
 
+    /**
+     * Adds a field value to the result Map, handling repeated and oneof fields.
+     *
+     * @param resultMap The result Map.
+     * @param fieldName The name of the field.
+     * @param value The value of the field.
+     * @param isRepeated Whether the field is a repeated field.
+     * @param isOneof Whether the field is part of a oneof.
+     */
     private static void addToResultMap(Map<String, Object> resultMap, String fieldName, Object value, boolean isRepeated, boolean isOneof) {
         if (isOneof || !isRepeated) {
             resultMap.put(fieldName, value);
@@ -179,6 +200,12 @@ public class ProtoReader {
         }
     }
 
+    /**
+     * Reads a varint from a ByteBuffer and converts it to a long.
+     *
+     * @param byteBuffer The ByteBuffer to read from.
+     * @return The varint as a long.
+     */
     private static long readVarint(ByteBuffer byteBuffer) {
         long result = 0;
         int shift = 0;
@@ -193,10 +220,22 @@ public class ProtoReader {
         return result;
     }
 
+    /**
+     * Decodes a ZigZag-encoded 32-bit integer.
+     *
+     * @param n The ZigZag-encoded integer to decode.
+     * @return The decoded integer.
+     */
     private static int decodeZigZag32(int n) {
         return (n >>> 1) ^ -(n & 1);
     }
 
+    /**
+     * Decodes a ZigZag-encoded 64-bit integer.
+     *
+     * @param n The ZigZag-encoded integer to decode.
+     * @return The decoded integer.
+     */
     private static long decodeZigZag64(long n) {
         return (n >>> 1) ^ -(n & 1);
     }
