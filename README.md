@@ -76,6 +76,7 @@ Despite its simplicity and flexibility, Twister attempts to maintain decent perf
 * Avro Record ➡️ Map wrapper
 * Protobuf Message ➡️ Map wrapper
 * .proto ➡️ Protobuf Descriptor converter
+* JDBC row ➡️ Map wrapper
 
 ## 🤖 GPT-4 Generated
 
