@@ -25,7 +25,7 @@ public class ProtoDescriptorInferrerTest extends TestCase {
         object.put("fieldFloat", Float.valueOf(32.0f));
         object.put("fieldBigInt", BigInteger.valueOf(Long.MAX_VALUE));
 
-        Descriptors.Descriptor descriptor = new ProtoDescriptorInferrer().descriptor(object, "TestMessage");
+        Descriptors.Descriptor descriptor = new ProtoDescriptorInferrer().infer(object, "TestMessage");
 
         // Create expected schema using DynamicSchema
         DynamicSchema.Builder schemaBuilder = DynamicSchema.newBuilder();
@@ -55,7 +55,7 @@ public class ProtoDescriptorInferrerTest extends TestCase {
         List<Integer> intList = Arrays.asList(32, 33, 34);
         object.put("fieldRepeated", intList);
 
-        Descriptors.Descriptor descriptor = new ProtoDescriptorInferrer().descriptor(object, "TestMessage");
+        Descriptors.Descriptor descriptor = new ProtoDescriptorInferrer().infer(object, "TestMessage");
 
         // Create expected schema using DynamicSchema
         DynamicSchema.Builder schemaBuilder = DynamicSchema.newBuilder();
@@ -87,7 +87,7 @@ public class ProtoDescriptorInferrerTest extends TestCase {
         object.put("fieldStr", "string");
         object.put("nestedMessage", nestedObject);
 
-        Descriptors.Descriptor descriptor = inferrer.descriptor(object, "TestMessage");
+        Descriptors.Descriptor descriptor = inferrer.infer(object, "TestMessage");
 
         // Create expected schema using DynamicSchema
         DynamicSchema.Builder schemaBuilder = DynamicSchema.newBuilder();

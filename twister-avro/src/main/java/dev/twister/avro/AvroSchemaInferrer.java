@@ -40,7 +40,7 @@ public class AvroSchemaInferrer {
      * @param recordName The name of the record.
      * @return The inferred Avro schema.
      */
-    public Schema schema(Map<String, Object> object, String recordName) {
+    public Schema infer(Map<String, Object> object, String recordName) {
         return getSchemaBasedOnObjectType(object, recordName, null);
     }
 

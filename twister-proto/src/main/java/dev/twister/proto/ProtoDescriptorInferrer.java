@@ -21,7 +21,7 @@ public class ProtoDescriptorInferrer {
      * @return The inferred Protocol Buffers message descriptor.
      * @throws RuntimeException If there is an error validating the inferred descriptor.
      */
-    public Descriptors.Descriptor descriptor(Map<String, Object> object, String messageName) {
+    public Descriptors.Descriptor infer(Map<String, Object> object, String messageName) {
         DescriptorProtos.FileDescriptorProto.Builder fileDescriptorBuilder = DescriptorProtos.FileDescriptorProto.newBuilder();
         DescriptorProtos.DescriptorProto.Builder messageBuilder = DescriptorProtos.DescriptorProto.newBuilder();
         int fieldNumber = 1;
@@ -44,7 +44,7 @@ public class ProtoDescriptorInferrer {
                 Descriptors.FieldDescriptor.Type fieldType = inferFieldType(((List<?>) fieldValue).get(0));
                 fieldBuilder.setType(fieldType.toProto());
             } else if (fieldValue instanceof Map) {
-                DescriptorProtos.DescriptorProto nestedMessage = descriptor((Map<String, Object>) fieldValue, messageName + "_" + fieldName).toProto();
+                DescriptorProtos.DescriptorProto nestedMessage = infer((Map<String, Object>) fieldValue, messageName + "_" + fieldName).toProto();
                 messageBuilder.addNestedType(nestedMessage);
                 fieldBuilder.setTypeName(nestedMessage.getName());
                 fieldBuilder.setLabel(DescriptorProtos.FieldDescriptorProto.Label.LABEL_OPTIONAL);
