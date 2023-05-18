@@ -59,6 +59,44 @@ And infer Avro Record schemas from POJO maps:
 Schema schema = new AvroSchemaInferrer().infer(object, "RecordName");
 ```
 
+## Getting Started
+
+For `twister-avro`:
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.twister</groupId>
+        <artifactId>twister-avro</artifactId>
+        <version>0.1.1</version>
+    </dependency>
+</dependencies>
+```
+
+```groovy
+dependencies {
+    implementation 'dev.twister:twister-avro:0.1.1'
+}
+```
+
+For `twister-proto`:
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>dev.twister</groupId>
+        <artifactId>twister-proto</artifactId>
+        <version>0.1.1</version>
+    </dependency>
+</dependencies>
+```
+
+```groovy
+dependencies {
+    implementation 'dev.twister:twister-proto:0.1.1'
+}
+```
+
 ## Why?
 
 Working with Avro and Protobuf can be complex due to their schema-based data encoding. Twister simplifies this by allowing users to operate on these data as Plain Old Java Objects (POJOs), making it a more natural fit for Java applications.
