@@ -1,7 +1,11 @@
 package dev.twister.proto;
 
-import com.google.protobuf.*;
-import com.google.protobuf.Descriptors.*;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors.Descriptor;
+import com.google.protobuf.Descriptors.EnumDescriptor;
+import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.DynamicMessage;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Map;

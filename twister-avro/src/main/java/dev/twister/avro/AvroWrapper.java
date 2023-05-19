@@ -5,7 +5,13 @@ import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.IndexedRecord;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.AbstractList;
+import java.util.AbstractMap;
+import java.util.AbstractSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This class provides functionality to wrap Avro IndexedRecord objects
@@ -99,7 +105,8 @@ public class AvroWrapper {
                         @Override
                         public Entry<String, Object> next() {
                             Schema.Field field = iterator.next();
-                            return new SimpleImmutableEntry<>(field.name(), coerceType(field.schema(), record.get(field.pos())));
+                            return new SimpleImmutableEntry<>(field.name(), coerceType(field.schema(),
+                                    record.get(field.pos())));
                         }
                     };
                 }
@@ -187,7 +194,8 @@ public class AvroWrapper {
                         @Override
                         public Entry<String, Object> next() {
                             Entry<String, Object> entry = iterator.next();
-                            return new SimpleImmutableEntry<>(entry.getKey(), coerceType(valueSchema, entry.getValue()));
+                            return new SimpleImmutableEntry<>(entry.getKey(), coerceType(valueSchema,
+                                    entry.getValue()));
                         }
                     };
                 }

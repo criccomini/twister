@@ -75,9 +75,11 @@ public class ProtoReader {
                             value = decodeZigZag64(rawValue);
                             break;
                         case ENUM:
-                            Descriptors.EnumValueDescriptor enumValueDescriptor = fieldDescriptor.getEnumType().findValueByNumber((int) rawValue);
+                            Descriptors.EnumValueDescriptor enumValueDescriptor =
+                                    fieldDescriptor.getEnumType().findValueByNumber((int) rawValue);
                             if (enumValueDescriptor == null) {
-                                throw new IllegalArgumentException("Unknown enum value: " + rawValue + " for field number: " + fieldNumber);
+                                throw new IllegalArgumentException("Unknown enum value: " + rawValue
+                                        + " for field number: " + fieldNumber);
                             }
                             value = enumValueDescriptor.getName();
                             break;
@@ -87,7 +89,8 @@ public class ProtoReader {
                             break;
                         case UINT64:
                         case FIXED64:
-                            value = new BigInteger(Long.toUnsignedString(rawValue)); // convert to BigInteger treating as unsigned
+                            // convert to BigInteger treating as unsigned
+                            value = new BigInteger(Long.toUnsignedString(rawValue));
                             break;
                         default:
                             value = rawValue;
@@ -115,7 +118,8 @@ public class ProtoReader {
                     break;
                 case 2: // Length-Delimited
                     // Check if the field is a map field
-                    if (fieldDescriptor.getType() == FieldDescriptor.Type.MESSAGE && fieldDescriptor.getMessageType().getOptions().getMapEntry()) {
+                    if (fieldDescriptor.getType() == FieldDescriptor.Type.MESSAGE
+                            && fieldDescriptor.getMessageType().getOptions().getMapEntry()) {
                         Descriptor mapEntryDescriptor = fieldDescriptor.getMessageType();
                         FieldDescriptor keyField = mapEntryDescriptor.findFieldByNumber(1);
                         FieldDescriptor valueField = mapEntryDescriptor.findFieldByNumber(2);
@@ -129,7 +133,9 @@ public class ProtoReader {
                         Object mapKey = mapEntry.get(keyField.getName());
                         Object mapValue = mapEntry.get(valueField.getName());
 
-                        Map<Object, Object> map = (Map<Object, Object>) resultMap.computeIfAbsent(fieldName, k -> new HashMap<>());
+                        Map<Object, Object> map = (Map<Object, Object>) resultMap.computeIfAbsent(
+                                fieldName,
+                                k -> new HashMap<>());
                         map.put(mapKey, mapValue);
                     } else {
                         int length = (int) readVarint(inputBuffer);
@@ -143,7 +149,9 @@ public class ProtoReader {
                             addToResultMap(resultMap, fieldName, byteBuffer, fieldDescriptor.isRepeated(), isOneof);
                         } else if (!isOneof && fieldDescriptor.getType() == FieldDescriptor.Type.MESSAGE) {
                             ByteBuffer nestedByteBuffer = ByteBuffer.wrap(bytes);
-                            Map<String, Object> nestedMessage = read(nestedByteBuffer, fieldDescriptor.getMessageType());
+                            Map<String, Object> nestedMessage = read(
+                                    nestedByteBuffer,
+                                    fieldDescriptor.getMessageType());
                             addToResultMap(resultMap, fieldName, nestedMessage, fieldDescriptor.isRepeated(), isOneof);
                         } else {
                             addToResultMap(resultMap, fieldName, bytes, fieldDescriptor.isRepeated(), isOneof);
@@ -184,7 +192,8 @@ public class ProtoReader {
      * @param isRepeated Whether the field is a repeated field.
      * @param isOneof Whether the field is part of a oneof.
      */
-    private static void addToResultMap(Map<String, Object> resultMap, String fieldName, Object value, boolean isRepeated, boolean isOneof) {
+    private static void addToResultMap(Map<String, Object> resultMap, String fieldName, Object value,
+                                       boolean isRepeated, boolean isOneof) {
         if (isOneof || !isRepeated) {
             resultMap.put(fieldName, value);
         } else {

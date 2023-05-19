@@ -4,7 +4,11 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * A utility class to infer Avro schema from Java objects.
