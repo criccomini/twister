@@ -7,6 +7,7 @@ Twister does some trippy stuff:
 * Avro Record bytes ↔️ Map POJOs
 * Avro Record objects ➡️ Map wrapper
 * Protobuf Message bytes ↔️ Map POJOs
+* Protobuf Message objects ➡️ Map wrapper
 * Map POJOs ➡️ Avro Schema
 * Map POJOs ➡️ Protobuf Descriptor
 
@@ -20,6 +21,12 @@ Decode Protobuf message bytes directly into POJO maps, bypassing Protobuf messag
 
 ```java
 Map<String, Object> object = new ProtoReader().read(bytes, descriptor);
+```
+
+Wrap an existing Protobuf message in a POJO map:
+
+```java
+Map<String, Object> wrapped = new ProtoWrapper().wrap(message);
 ```
 
 Encode POJO objects directly into Protobuf bytes:
@@ -118,7 +125,6 @@ Despite its simplicity and flexibility, Twister attempts to maintain decent perf
 * Avro default support
 * Avro logical type support
 * Protobuf WKT support
-* Protobuf Message ➡️ Map wrapper
 * .proto ➡️ Protobuf Descriptor converter
 * JDBC row ➡️ Map wrapper
 
