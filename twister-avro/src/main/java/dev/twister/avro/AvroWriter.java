@@ -108,7 +108,8 @@ public class AvroWriter {
                 case FIXED:
                     ByteBuffer fixedValueBuffer = (ByteBuffer) value;
                     if (fixedValueBuffer.remaining() != schema.getFixedSize()) {
-                        throw new IOException("Invalid fixed value size: " + fixedValueBuffer.remaining() + " for schema: " + schema);
+                        throw new IOException("Invalid fixed value size: " + fixedValueBuffer.remaining()
+                                + " for schema: " + schema);
                     }
                     out.writeFixed(fixedValueBuffer);
                     break;

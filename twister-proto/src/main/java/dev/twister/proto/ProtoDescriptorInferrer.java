@@ -22,7 +22,8 @@ public class ProtoDescriptorInferrer {
      * @throws RuntimeException If there is an error validating the inferred descriptor.
      */
     public Descriptors.Descriptor infer(Map<String, Object> object, String messageName) {
-        DescriptorProtos.FileDescriptorProto.Builder fileDescriptorBuilder = DescriptorProtos.FileDescriptorProto.newBuilder();
+        DescriptorProtos.FileDescriptorProto.Builder fileDescriptorBuilder =
+                DescriptorProtos.FileDescriptorProto.newBuilder();
         DescriptorProtos.DescriptorProto.Builder messageBuilder = DescriptorProtos.DescriptorProto.newBuilder();
         int fieldNumber = 1;
 
@@ -32,7 +33,8 @@ public class ProtoDescriptorInferrer {
         for (Map.Entry<String, Object> entry : object.entrySet()) {
             String fieldName = entry.getKey();
             Object fieldValue = entry.getValue();
-            DescriptorProtos.FieldDescriptorProto.Builder fieldBuilder = DescriptorProtos.FieldDescriptorProto.newBuilder();
+            DescriptorProtos.FieldDescriptorProto.Builder fieldBuilder =
+                    DescriptorProtos.FieldDescriptorProto.newBuilder();
 
             // Set field name and number
             fieldBuilder.setName(fieldName);
@@ -44,7 +46,9 @@ public class ProtoDescriptorInferrer {
                 Descriptors.FieldDescriptor.Type fieldType = inferFieldType(((List<?>) fieldValue).get(0));
                 fieldBuilder.setType(fieldType.toProto());
             } else if (fieldValue instanceof Map) {
-                DescriptorProtos.DescriptorProto nestedMessage = infer((Map<String, Object>) fieldValue, messageName + "_" + fieldName).toProto();
+                DescriptorProtos.DescriptorProto nestedMessage = infer(
+                        (Map<String, Object>) fieldValue,
+                        messageName + "_" + fieldName).toProto();
                 messageBuilder.addNestedType(nestedMessage);
                 fieldBuilder.setTypeName(nestedMessage.getName());
                 fieldBuilder.setLabel(DescriptorProtos.FieldDescriptorProto.Label.LABEL_OPTIONAL);
@@ -62,7 +66,9 @@ public class ProtoDescriptorInferrer {
         fileDescriptorBuilder.addMessageType(messageBuilder.build());
 
         try {
-            Descriptors.FileDescriptor fileDescriptor = Descriptors.FileDescriptor.buildFrom(fileDescriptorBuilder.build(), new Descriptors.FileDescriptor[0]);
+            Descriptors.FileDescriptor fileDescriptor = Descriptors.FileDescriptor.buildFrom(
+                    fileDescriptorBuilder.build(),
+                    new Descriptors.FileDescriptor[0]);
             return fileDescriptor.findMessageTypeByName(messageName);
         } catch (Descriptors.DescriptorValidationException e) {
             throw new RuntimeException("Error inferring descriptor: " + e.getMessage(), e);
