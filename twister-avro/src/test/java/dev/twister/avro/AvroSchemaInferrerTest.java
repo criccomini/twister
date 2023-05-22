@@ -4,6 +4,8 @@ import junit.framework.TestCase;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 
+import java.math.BigDecimal;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +66,7 @@ public class AvroSchemaInferrerTest extends TestCase {
         map.put("field3", 45.67);
 
         // Create an AvroSchemaInferrer with mapAsRecord = false
-        AvroSchemaInferrer inferrer = new AvroSchemaInferrer(false);
+        AvroSchemaInferrer inferrer = new AvroSchemaInferrer(false, ChronoUnit.MILLIS);
 
         // Infer the Avro schema for the map
         Schema schema = inferrer.infer(map, "TestRecord");
@@ -72,5 +74,16 @@ public class AvroSchemaInferrerTest extends TestCase {
         // Check that the resulting schema is a map schema with a union value type
         assertEquals(Schema.Type.MAP, schema.getType());
         assertEquals(Schema.Type.UNION, schema.getValueType().getType());
+    }
+
+    public void testBigDecimal() {
+        Map<String, Object> map = new HashMap<>();
+        BigDecimal decimalValue = new BigDecimal("123.456");
+        map.put("decimalField", decimalValue);
+
+        Schema schema = new AvroSchemaInferrer().infer(map, "TestDecimal");
+        String expectedSchema = String.format("{\"type\":\"record\",\"name\":\"TestDecimal\",\"fields\":[{\"name\":\"decimalField\",\"type\":[\"null\",{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":%d,\"scale\":%d}]}]}", decimalValue.precision(), decimalValue.scale());
+
+        assertEquals(expectedSchema, schema.toString());
     }
 }

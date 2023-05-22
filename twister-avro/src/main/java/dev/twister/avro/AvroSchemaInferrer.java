@@ -1,14 +1,22 @@
 package dev.twister.avro;
 
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.UUID;
 
 /**
  * A utility class to infer Avro schema from Java objects.
@@ -22,19 +30,30 @@ public class AvroSchemaInferrer {
     private final boolean mapAsRecord;
 
     /**
+     * A ChronoUnit to determine the precision of time-based Avro logical types.
+     * It must be either MILLIS or MICROS.
+     */
+    private final ChronoUnit timePrecision;
+
+    /**
      * Creates an AvroSchemaInferrer with the default behavior of treating maps as records.
      */
     public AvroSchemaInferrer() {
-        this(true);
+        this(true, ChronoUnit.MILLIS);
     }
 
     /**
      * Creates an AvroSchemaInferrer.
      *
      * @param mapAsRecord A flag to indicate whether maps should be treated as records.
+     * @param timePrecision A ChronoUnit to determine the precision of time-based Avro logical types.
      */
-    public AvroSchemaInferrer(boolean mapAsRecord) {
+    public AvroSchemaInferrer(boolean mapAsRecord, ChronoUnit timePrecision) {
+        if (timePrecision != ChronoUnit.MILLIS && timePrecision != ChronoUnit.MICROS) {
+            throw new IllegalArgumentException("Unsupported time precision: " + timePrecision);
+        }
         this.mapAsRecord = mapAsRecord;
+        this.timePrecision = timePrecision;
     }
 
     /**
@@ -96,6 +115,32 @@ public class AvroSchemaInferrer {
                 schema = SchemaBuilder.array().items(nullableSchema(elementType));
             } else {
                 throw new IllegalArgumentException("Cannot infer schema for an empty array");
+            }
+        } else if (value instanceof BigDecimal) {
+            BigDecimal bigDecimal = (BigDecimal) value;
+            schema = LogicalTypes.decimal(bigDecimal.precision(), bigDecimal.scale())
+                    .addToSchema(Schema.create(Schema.Type.BYTES));
+        } else if (value instanceof UUID) {
+            schema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
+        } else if (value instanceof LocalDate) {
+            schema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
+        } else if (value instanceof LocalTime) {
+            if (timePrecision == ChronoUnit.MILLIS) {
+                schema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
+            } else {
+                schema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
+            }
+        } else if (value instanceof Instant) {
+            if (timePrecision == ChronoUnit.MILLIS) {
+                schema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+            } else {
+                schema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+            }
+        } else if (value instanceof LocalDateTime) {
+            if (timePrecision == ChronoUnit.MILLIS) {
+                schema = LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+            } else {
+                schema = LogicalTypes.localTimestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
             }
         } else {
             throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName());

@@ -12,7 +12,9 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -232,6 +234,13 @@ public class AvroReader {
         }, "timestamp-micros", (decoder, schema) -> {
             long microsSinceEpoch = decoder.readLong();
             return Instant.ofEpochSecond(microsSinceEpoch / 1_000_000, (microsSinceEpoch % 1_000_000) * 1_000);
+        }, "local-timestamp-millis", (decoder, schema) -> {
+            long millisSinceEpoch = decoder.readLong();
+            return LocalDateTime.ofInstant(Instant.ofEpochMilli(millisSinceEpoch), ZoneOffset.UTC);
+        }, "local-timestamp-micros", (decoder, schema) -> {
+            long microsSinceEpoch = decoder.readLong();
+            return LocalDateTime.ofInstant(Instant.ofEpochSecond(microsSinceEpoch / 1_000_000,
+                    (microsSinceEpoch % 1_000_000) * 1_000), ZoneOffset.UTC);
         });
     }
 }
