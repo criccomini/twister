@@ -8,10 +8,16 @@ import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class AvroReaderTest extends TestCase {
     public void testPrimitives() throws Exception {
@@ -111,6 +117,152 @@ public class AvroReaderTest extends TestCase {
         Map<String, Object> resultMapWithNull = new AvroReader().read(byteBufferWithNull, schema);
 
         assertNull(resultMapWithNull.get("unionField"));
+    }
+
+    public void testDecimalLogicalType() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"decimalField\", \"type\": {\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":4,\"scale\":2}}\n" +
+                "  ]\n" +
+                "}";
+        Schema schema = new Schema.Parser().parse(schemaJson);
+
+        BigDecimal decimalValue = new BigDecimal("12.34");
+        BigInteger unscaledValue = decimalValue.unscaledValue();
+        byte[] bytesValue = unscaledValue.toByteArray();
+
+        GenericData.Record record = new GenericData.Record(schema);
+        record.put("decimalField", ByteBuffer.wrap(bytesValue));
+
+        ByteBuffer byteBuffer = encodeRecordToByteBuffer(record, schema);
+        Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
+
+        BigDecimal resultDecimal = (BigDecimal) resultMap.get("decimalField");
+
+        assertEquals(decimalValue, resultDecimal);
+    }
+
+    public void testUuidLogicalType() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"uuidField\", \"type\": {\"type\":\"string\",\"logicalType\":\"uuid\"}}\n" +
+                "  ]\n" +
+                "}";
+        Schema schema = new Schema.Parser().parse(schemaJson);
+
+        UUID uuidValue = UUID.randomUUID();
+        GenericData.Record record = new GenericData.Record(schema);
+        record.put("uuidField", uuidValue.toString());
+
+        ByteBuffer byteBuffer = encodeRecordToByteBuffer(record, schema);
+        Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
+
+        assertEquals(uuidValue, resultMap.get("uuidField"));
+    }
+
+    public void testDateLogicalType() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"dateField\", \"type\": {\"type\":\"int\",\"logicalType\":\"date\"}}\n" +
+                "  ]\n" +
+                "}";
+        Schema schema = new Schema.Parser().parse(schemaJson);
+
+        LocalDate dateValue = LocalDate.of(2023, 5, 22);
+        int daysSinceEpoch = (int) dateValue.toEpochDay();
+        GenericData.Record record = new GenericData.Record(schema);
+        record.put("dateField", daysSinceEpoch);
+
+        ByteBuffer byteBuffer = encodeRecordToByteBuffer(record, schema);
+        Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
+
+        assertEquals(dateValue, resultMap.get("dateField"));
+    }
+
+    public void testTimeMillisLogicalType() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"timeMillisField\", \"type\": {\"type\":\"int\",\"logicalType\":\"time-millis\"}}\n" +
+                "  ]\n" +
+                "}";
+        Schema schema = new Schema.Parser().parse(schemaJson);
+
+        int millisInDay = 12345678; // Represents the number of milliseconds past midnight.
+        GenericData.Record record = new GenericData.Record(schema);
+        record.put("timeMillisField", millisInDay);
+
+        ByteBuffer byteBuffer = encodeRecordToByteBuffer(record, schema);
+        Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
+
+        assertEquals(LocalTime.ofNanoOfDay(millisInDay * 1000000L), resultMap.get("timeMillisField"));
+    }
+
+    public void testTimeMicrosLogicalType() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"timeMicrosField\", \"type\": {\"type\":\"long\",\"logicalType\":\"time-micros\"}}\n" +
+                "  ]\n" +
+                "}";
+        Schema schema = new Schema.Parser().parse(schemaJson);
+
+        long microsInDay = 12345678910L; // Represents the number of microseconds past midnight.
+        GenericData.Record record = new GenericData.Record(schema);
+        record.put("timeMicrosField", microsInDay);
+
+        ByteBuffer byteBuffer = encodeRecordToByteBuffer(record, schema);
+        Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
+
+        assertEquals(LocalTime.ofNanoOfDay(microsInDay * 1000L), resultMap.get("timeMicrosField"));
+    }
+
+    public void testTimestampMillisLogicalType() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"timestampMillisField\", \"type\": {\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}}\n" +
+                "  ]\n" +
+                "}";
+        Schema schema = new Schema.Parser().parse(schemaJson);
+
+        long timestampMillis = 1234567891011L; // Represents a timestamp in milliseconds since the Unix epoch.
+        GenericData.Record record = new GenericData.Record(schema);
+        record.put("timestampMillisField", timestampMillis);
+
+        ByteBuffer byteBuffer = encodeRecordToByteBuffer(record, schema);
+        Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
+
+        assertEquals(Instant.ofEpochMilli(timestampMillis), resultMap.get("timestampMillisField"));
+    }
+
+    public void testTimestampMicrosLogicalType() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"timestampMicrosField\", \"type\": {\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}}\n" +
+                "  ]\n" +
+                "}";
+        Schema schema = new Schema.Parser().parse(schemaJson);
+
+        long timestampMicros = 12345678910111213L; // Represents a timestamp in microseconds since the Unix epoch.
+        GenericData.Record record = new GenericData.Record(schema);
+        record.put("timestampMicrosField", timestampMicros);
+
+        ByteBuffer byteBuffer = encodeRecordToByteBuffer(record, schema);
+        Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
+
+        assertEquals(Instant.ofEpochSecond(timestampMicros / 1_000_000, (timestampMicros % 1_000_000) * 1_000), resultMap.get("timestampMicrosField"));
     }
 
     private ByteBuffer encodeRecordToByteBuffer(GenericData.Record record, Schema schema) throws Exception {
