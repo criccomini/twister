@@ -11,9 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -263,6 +261,48 @@ public class AvroReaderTest extends TestCase {
         Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
 
         assertEquals(Instant.ofEpochSecond(timestampMicros / 1_000_000, (timestampMicros % 1_000_000) * 1_000), resultMap.get("timestampMicrosField"));
+    }
+
+    public void testLocalTimestampMillisLogicalType() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"localTimestampMillisField\", \"type\": {\"type\":\"long\",\"logicalType\":\"local-timestamp-millis\"}}\n" +
+                "  ]\n" +
+                "}";
+        Schema schema = new Schema.Parser().parse(schemaJson);
+
+        long localTimestampMillis = 1234567891011L; // Represents a timestamp in milliseconds since midnight.
+        GenericData.Record record = new GenericData.Record(schema);
+        record.put("localTimestampMillisField", localTimestampMillis);
+
+        ByteBuffer byteBuffer = encodeRecordToByteBuffer(record, schema);
+        Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
+
+        LocalDateTime expectedDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(localTimestampMillis), ZoneOffset.UTC);
+        assertEquals(expectedDateTime, resultMap.get("localTimestampMillisField"));
+    }
+
+    public void testLocalTimestampMicrosLogicalType() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"localTimestampMicrosField\", \"type\": {\"type\":\"long\",\"logicalType\":\"local-timestamp-micros\"}}\n" +
+                "  ]\n" +
+                "}";
+        Schema schema = new Schema.Parser().parse(schemaJson);
+
+        long localTimestampMicros = 12345678910111213L; // Represents a timestamp in microseconds since midnight.
+        GenericData.Record record = new GenericData.Record(schema);
+        record.put("localTimestampMicrosField", localTimestampMicros);
+
+        ByteBuffer byteBuffer = encodeRecordToByteBuffer(record, schema);
+        Map<String, Object> resultMap = new AvroReader().read(byteBuffer, schema);
+
+        LocalDateTime expectedDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(localTimestampMicros / 1_000_000, (localTimestampMicros % 1_000_000) * 1_000), ZoneOffset.UTC);
+        assertEquals(expectedDateTime, resultMap.get("localTimestampMicrosField"));
     }
 
     private ByteBuffer encodeRecordToByteBuffer(GenericData.Record record, Schema schema) throws Exception {
