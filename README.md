@@ -124,6 +124,7 @@ Despite its simplicity and flexibility, Twister attempts to maintain decent perf
 
 * Protobuf WKT support
 * JDBC row ➡️ Map wrapper
+* Parquet ➡️ Map POJOs
 
 ## 🤖 GPT-4 Generated
 
