@@ -42,7 +42,7 @@ public class AvroReader {
      *   <li>timestamp-micros</li>
      * </ul>
      */
-    private static final Map<String, LogicalTypeReader> DEFAULT_LOGICAL_TYPE_READERS;
+    public static final Map<String, LogicalTypeReader> DEFAULT_LOGICAL_TYPE_READERS;
 
     /**
      * A {@link Map} of {@link LogicalTypeReader}s used to interpret Avro logical types.

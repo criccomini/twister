@@ -1,13 +1,20 @@
 package dev.twister.avro;
 
 import junit.framework.TestCase;
+import org.apache.avro.Conversions;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.generic.GenericRecordBuilder;
 
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class AvroWrapperTest extends TestCase {
     public void testWrapPrimitives() {
@@ -193,5 +200,131 @@ public class AvroWrapperTest extends TestCase {
         assertTrue(list.get(1) instanceof Map);
         Map<String, Object> subRecord2Map = (Map<String, Object>) list.get(1);
         assertEquals(2, subRecord2Map.get("subField"));
+    }
+
+    public void testWrapLogicalDate() {
+        Schema dateSchema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
+        Schema recordSchema = Schema.createRecord("TestRecord", "", "", false);
+        recordSchema.setFields(Collections.singletonList(new Schema.Field("testDate", dateSchema, "", null)));
+
+        GenericRecord record = new GenericData.Record(recordSchema);
+        LocalDate testDate = LocalDate.now();
+        record.put("testDate", (int) testDate.toEpochDay());
+
+        AvroWrapper wrapper = new AvroWrapper();
+        Map<String, Object> result = wrapper.wrap(record);
+
+        assertEquals(testDate, result.get("testDate"));
+    }
+
+    public void testWrapLogicalTimestampMillis() {
+        Schema timestampMillisSchema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+        Schema recordSchema = Schema.createRecord("TestRecord", "", "", false);
+        recordSchema.setFields(Collections.singletonList(new Schema.Field("testTimestampMillis", timestampMillisSchema, "", null)));
+
+        GenericRecord record = new GenericData.Record(recordSchema);
+        Instant now = Instant.now();
+        record.put("testTimestampMillis", now.toEpochMilli());
+
+        AvroWrapper wrapper = new AvroWrapper();
+        Map<String, Object> result = wrapper.wrap(record);
+
+        assertEquals(now.truncatedTo(ChronoUnit.MILLIS), result.get("testTimestampMillis"));
+    }
+
+    public void testWrapLogicalTimestampMicros() {
+        Schema timestampMicrosSchema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+        Schema recordSchema = Schema.createRecord("TestRecord", "", "", false);
+        recordSchema.setFields(Collections.singletonList(new Schema.Field("testTimestampMicros", timestampMicrosSchema, "", null)));
+
+        GenericRecord record = new GenericData.Record(recordSchema);
+        Instant now = Instant.now();
+        long epochMicros = TimeUnit.SECONDS.toMicros(now.getEpochSecond()) + now.getNano() / 1000;
+        record.put("testTimestampMicros", epochMicros);
+
+        AvroWrapper wrapper = new AvroWrapper();
+        Map<String, Object> result = wrapper.wrap(record);
+
+        assertEquals(now.truncatedTo(ChronoUnit.MICROS), result.get("testTimestampMicros"));
+    }
+
+    public void testWrapLogicalLocalTimestampMillis() {
+        Schema localTimestampMillisSchema = LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
+        Schema recordSchema = Schema.createRecord("TestRecord", "", "", false);
+        recordSchema.setFields(Collections.singletonList(new Schema.Field("testLocalTimestampMillis", localTimestampMillisSchema, "", null)));
+
+        GenericRecord record = new GenericData.Record(recordSchema);
+        LocalDateTime now = LocalDateTime.now();
+        long epochMillis = now.atZone(ZoneOffset.UTC).toInstant().toEpochMilli();
+        record.put("testLocalTimestampMillis", epochMillis);
+
+        AvroWrapper wrapper = new AvroWrapper();
+        Map<String, Object> result = wrapper.wrap(record);
+
+        assertEquals(now.truncatedTo(ChronoUnit.MILLIS), result.get("testLocalTimestampMillis"));
+    }
+
+    public void testWrapLogicalLocalTimestampMicros() {
+        Schema localTimestampMicrosSchema = LogicalTypes.localTimestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+        Schema recordSchema = Schema.createRecord("TestRecord", "", "", false);
+        recordSchema.setFields(Collections.singletonList(new Schema.Field("testLocalTimestampMicros", localTimestampMicrosSchema, "", null)));
+
+        GenericRecord record = new GenericData.Record(recordSchema);
+        LocalDateTime now = LocalDateTime.now();
+        long epochMicros = TimeUnit.SECONDS.toMicros(now.atZone(ZoneOffset.UTC).toEpochSecond()) + now.getNano() / 1000;
+        record.put("testLocalTimestampMicros", epochMicros);
+
+        AvroWrapper wrapper = new AvroWrapper();
+        Map<String, Object> result = wrapper.wrap(record);
+
+        assertEquals(now.truncatedTo(ChronoUnit.MICROS), result.get("testLocalTimestampMicros"));
+    }
+
+    public void testWrapLogicalTimeMillis() {
+        Schema timeMillisSchema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
+        Schema recordSchema = Schema.createRecord("TestRecord", "", "", false);
+        recordSchema.setFields(Collections.singletonList(new Schema.Field("testTimeMillis", timeMillisSchema, "", null)));
+
+        GenericRecord record = new GenericData.Record(recordSchema);
+        LocalTime now = LocalTime.now();
+        int millisOfDay = (int) (TimeUnit.SECONDS.toMillis(now.toSecondOfDay()) + (now.getNano() / 1_000_000));
+        record.put("testTimeMillis", millisOfDay);
+
+        AvroWrapper wrapper = new AvroWrapper();
+        Map<String, Object> result = wrapper.wrap(record);
+
+        assertEquals(now.truncatedTo(ChronoUnit.MILLIS), result.get("testTimeMillis"));
+    }
+
+    public void testWrapLogicalTimeMicros() {
+        Schema timeMicrosSchema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
+        Schema recordSchema = Schema.createRecord("TestRecord", "", "", false);
+        recordSchema.setFields(Collections.singletonList(new Schema.Field("testTimeMicros", timeMicrosSchema, "", null)));
+
+        GenericRecord record = new GenericData.Record(recordSchema);
+        LocalTime now = LocalTime.now();
+        long microsOfDay = TimeUnit.SECONDS.toMicros(now.toSecondOfDay()) + now.getNano() / 1000;
+        record.put("testTimeMicros", microsOfDay);
+
+        AvroWrapper wrapper = new AvroWrapper();
+        Map<String, Object> result = wrapper.wrap(record);
+
+        assertEquals(now.truncatedTo(ChronoUnit.MICROS), result.get("testTimeMicros"));
+    }
+
+    public void testWrapLogicalDecimal() {
+        LogicalTypes.Decimal decimalLogicalType = LogicalTypes.decimal(9, 2);
+        Schema decimalSchema = decimalLogicalType.addToSchema(Schema.createFixed("TestDecimal", "", "", 5));
+        Schema recordSchema = Schema.createRecord("TestRecord", "", "", false);
+        recordSchema.setFields(Collections.singletonList(new Schema.Field("testDecimal", decimalSchema, "", null)));
+
+        GenericRecord record = new GenericData.Record(recordSchema);
+        BigDecimal decimalValue = new BigDecimal("12345.67");
+        record.put("testDecimal", new Conversions.DecimalConversion().toFixed(decimalValue, decimalSchema, decimalLogicalType));
+
+        AvroWrapper wrapper = new AvroWrapper();
+        Map<String, Object> result = wrapper.wrap(record);
+
+        assertEquals(decimalValue, result.get("testDecimal"));
     }
 }

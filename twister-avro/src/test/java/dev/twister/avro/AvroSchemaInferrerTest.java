@@ -5,10 +5,10 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 
 import java.math.BigDecimal;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class AvroSchemaInferrerTest extends TestCase {
     public void testSchemaInferrer() {
@@ -66,7 +66,7 @@ public class AvroSchemaInferrerTest extends TestCase {
         map.put("field3", 45.67);
 
         // Create an AvroSchemaInferrer with mapAsRecord = false
-        AvroSchemaInferrer inferrer = new AvroSchemaInferrer(false, ChronoUnit.MILLIS);
+        AvroSchemaInferrer inferrer = new AvroSchemaInferrer(false, TimeUnit.MILLISECONDS);
 
         // Infer the Avro schema for the map
         Schema schema = inferrer.infer(map, "TestRecord");

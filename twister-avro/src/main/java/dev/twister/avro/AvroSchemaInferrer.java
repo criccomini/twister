@@ -10,13 +10,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A utility class to infer Avro schema from Java objects.
@@ -30,26 +30,26 @@ public class AvroSchemaInferrer {
     private final boolean mapAsRecord;
 
     /**
-     * A ChronoUnit to determine the precision of time-based Avro logical types.
+     * A TimeUnit to determine the precision of time-based Avro logical types.
      * It must be either MILLIS or MICROS.
      */
-    private final ChronoUnit timePrecision;
+    private final TimeUnit timePrecision;
 
     /**
      * Creates an AvroSchemaInferrer with the default behavior of treating maps as records.
      */
     public AvroSchemaInferrer() {
-        this(true, ChronoUnit.MILLIS);
+        this(true, TimeUnit.MILLISECONDS);
     }
 
     /**
      * Creates an AvroSchemaInferrer.
      *
      * @param mapAsRecord A flag to indicate whether maps should be treated as records.
-     * @param timePrecision A ChronoUnit to determine the precision of time-based Avro logical types.
+     * @param timePrecision A TimeUnit to determine the precision of time-based Avro logical types.
      */
-    public AvroSchemaInferrer(boolean mapAsRecord, ChronoUnit timePrecision) {
-        if (timePrecision != ChronoUnit.MILLIS && timePrecision != ChronoUnit.MICROS) {
+    public AvroSchemaInferrer(boolean mapAsRecord, TimeUnit timePrecision) {
+        if (timePrecision != TimeUnit.MILLISECONDS && timePrecision != TimeUnit.MICROSECONDS) {
             throw new IllegalArgumentException("Unsupported time precision: " + timePrecision);
         }
         this.mapAsRecord = mapAsRecord;
@@ -125,19 +125,19 @@ public class AvroSchemaInferrer {
         } else if (value instanceof LocalDate) {
             schema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
         } else if (value instanceof LocalTime) {
-            if (timePrecision == ChronoUnit.MILLIS) {
+            if (timePrecision == TimeUnit.MILLISECONDS) {
                 schema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
             } else {
                 schema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
             }
         } else if (value instanceof Instant) {
-            if (timePrecision == ChronoUnit.MILLIS) {
+            if (timePrecision == TimeUnit.MILLISECONDS) {
                 schema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
             } else {
                 schema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
             }
         } else if (value instanceof LocalDateTime) {
-            if (timePrecision == ChronoUnit.MILLIS) {
+            if (timePrecision == TimeUnit.MILLISECONDS) {
                 schema = LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
             } else {
                 schema = LogicalTypes.localTimestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
