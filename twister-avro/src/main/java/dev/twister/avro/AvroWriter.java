@@ -1,5 +1,6 @@
 package dev.twister.avro;
 
+import org.apache.avro.LogicalType;
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
@@ -8,14 +9,51 @@ import org.apache.avro.io.EncoderFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * This class provides functionality to write Avro data based on the provided Avro schema and data.
  */
 public class AvroWriter {
+
+    /**
+     * A map of default logical type writers provided out-of-the-box by AvroWriter. Each entry maps a logical type name
+     * to a LogicalTypeWriter capable of writing data of that logical type.
+     */
+    public static final Map<String, LogicalTypeWriter> DEFAULT_LOGICAL_TYPE_WRITERS;
+
+    /**
+     * A map of logical type writers that will be used by this AvroWriter instance. Each entry maps a logical type name
+     * to a LogicalTypeWriter capable of writing data of that logical type.
+     * Can be replaced with a custom map to override the default logical type writers.
+     */
+    private final Map<String, LogicalTypeWriter> logicalTypeWriters;
+
+    /**
+     * Default constructor that uses the default logical type writers.
+     */
+    public AvroWriter() {
+        this(DEFAULT_LOGICAL_TYPE_WRITERS);
+    }
+
+    /**
+     * Constructor that accepts a custom map of logical type writers.
+     *
+     * @param logicalTypeWriters A map of logical type writers. Each entry maps a logical type name
+     *                           to a LogicalTypeWriter capable of writing data of that logical type.
+     */
+    public AvroWriter(Map<String, LogicalTypeWriter> logicalTypeWriters) {
+        this.logicalTypeWriters = logicalTypeWriters;
+    }
 
     /**
      * This class provides functionality to write Avro data based on a provided Avro schema and map data.
@@ -41,6 +79,15 @@ public class AvroWriter {
          * @throws IOException If an error occurs during writing.
          */
         private void writeObject(Object value, Schema schema, Encoder out) throws IOException {
+            LogicalType logicalType = schema.getLogicalType();
+            if (logicalType != null) {
+                LogicalTypeWriter logicalTypeWriter = logicalTypeWriters.get(logicalType.getName());
+                if (logicalTypeWriter != null) {
+                    logicalTypeWriter.write(value, schema, out);
+                    return;
+                }
+            }
+
             switch (schema.getType()) {
                 case BOOLEAN:
                     out.writeBoolean((Boolean) value);
@@ -138,6 +185,14 @@ public class AvroWriter {
          * @throws UnsupportedOperationException If the schema type is unsupported.
          */
         private Class<?> getExpectedClass(Schema schema) {
+            LogicalType logicalType = schema.getLogicalType();
+            if (logicalType != null) {
+                LogicalTypeWriter logicalTypeWriter = logicalTypeWriters.get(logicalType.getName());
+                if (logicalTypeWriter != null) {
+                    return logicalTypeWriter.getExpectedClass();
+                }
+            }
+
             switch (schema.getType()) {
                 case BOOLEAN: return Boolean.class;
                 case INT:     return Integer.class;
@@ -211,5 +266,187 @@ public class AvroWriter {
         writer.write(object, encoder);
         encoder.flush();
         return ByteBuffer.wrap(outputStream.toByteArray());
+    }
+
+    /**
+     * This interface provides a contract for classes that write logical types based on a provided Avro schema and data.
+     */
+    public interface LogicalTypeWriter {
+        /**
+         * Writes a logical type value to the output Encoder.
+         *
+         * @param value  The value to write, expected to be of the class returned by getExpectedClass().
+         * @param schema The Avro Schema for the data being written.
+         * @param out    The Encoder to write to.
+         * @throws IOException If there's an error writing the data.
+         */
+        void write(Object value, Schema schema, Encoder out) throws IOException;
+
+        /**
+         * Returns the Java class that this LogicalTypeWriter expects to write.
+         *
+         * @return The Java class that this LogicalTypeWriter expects to write.
+         */
+        Class<?> getExpectedClass();
+    }
+
+    static {
+        DEFAULT_LOGICAL_TYPE_WRITERS = Map.of(
+                "decimal", new DecimalWriter(),
+                "uuid", new UuidWriter(),
+                "date", new DateWriter(),
+                "time-millis", new TimeMillisWriter(),
+                "time-micros", new TimeMicrosWriter(),
+                "timestamp-millis", new TimestampMillisWriter(),
+                "timestamp-micros", new TimestampMicrosWriter(),
+                "local-timestamp-millis", new LocalTimestampMillisWriter(),
+                "local-timestamp-micros", new LocalTimestampMicrosWriter()
+        );
+    }
+
+    /**
+     * A LogicalTypeWriter implementation for writing "decimal" Avro logical type data.
+     * The expected Java class is java.math.BigDecimal.
+     */
+    public static class DecimalWriter implements AvroWriter.LogicalTypeWriter {
+        @Override
+        public void write(Object value, Schema schema, Encoder out) throws IOException {
+            out.writeBytes(((BigDecimal) value).unscaledValue().toByteArray());
+        }
+
+        @Override
+        public Class<?> getExpectedClass() {
+            return BigDecimal.class;
+        }
+    }
+
+    /**
+     * A LogicalTypeWriter implementation for writing "uuid" Avro logical type data.
+     * The expected Java class is java.util.UUID.
+     */
+    public static class UuidWriter implements AvroWriter.LogicalTypeWriter {
+        @Override
+        public void write(Object value, Schema schema, Encoder out) throws IOException {
+            out.writeString(value.toString());
+        }
+
+        @Override
+        public Class<?> getExpectedClass() {
+            return UUID.class;
+        }
+    }
+
+    /**
+     * A LogicalTypeWriter implementation for writing "date" Avro logical type data.
+     * The expected Java class is java.time.LocalDate.
+     */
+    public static class DateWriter implements AvroWriter.LogicalTypeWriter {
+        @Override
+        public void write(Object value, Schema schema, Encoder out) throws IOException {
+            out.writeInt((int) ((LocalDate) value).toEpochDay());
+        }
+
+        @Override
+        public Class<?> getExpectedClass() {
+            return LocalDate.class;
+        }
+    }
+
+    /**
+     * A LogicalTypeWriter implementation for writing "time-millis" Avro logical type data.
+     * The expected Java class is java.time.LocalTime.
+     */
+    public static class TimeMillisWriter implements AvroWriter.LogicalTypeWriter {
+        @Override
+        public void write(Object value, Schema schema, Encoder out) throws IOException {
+            out.writeInt((int) (((LocalTime) value).toNanoOfDay() / 1_000_000));
+        }
+
+        @Override
+        public Class<?> getExpectedClass() {
+            return LocalTime.class;
+        }
+    }
+
+    /**
+     * A LogicalTypeWriter implementation for writing "time-micros" Avro logical type data.
+     * The expected Java class is java.time.LocalTime.
+     */
+    public static class TimeMicrosWriter implements AvroWriter.LogicalTypeWriter {
+        @Override
+        public void write(Object value, Schema schema, Encoder out) throws IOException {
+            out.writeLong(((LocalTime) value).toNanoOfDay() / 1_000);
+        }
+
+        @Override
+        public Class<?> getExpectedClass() {
+            return LocalTime.class;
+        }
+    }
+
+    /**
+     * A LogicalTypeWriter implementation for writing "timestamp-millis" Avro logical type data.
+     * The expected Java class is java.time.Instant.
+     */
+    public static class TimestampMillisWriter implements AvroWriter.LogicalTypeWriter {
+        @Override
+        public void write(Object value, Schema schema, Encoder out) throws IOException {
+            out.writeLong(((Instant) value).toEpochMilli());
+        }
+
+        @Override
+        public Class<?> getExpectedClass() {
+            return Instant.class;
+        }
+    }
+
+    /**
+     * A LogicalTypeWriter implementation for writing "timestamp-micros" Avro logical type data.
+     * The expected Java class is java.time.Instant.
+     */
+    public static class TimestampMicrosWriter implements AvroWriter.LogicalTypeWriter {
+        @Override
+        public void write(Object value, Schema schema, Encoder out) throws IOException {
+            out.writeLong(((Instant) value).getEpochSecond() * 1_000_000 + ((Instant) value).getNano() / 1_000);
+        }
+
+        @Override
+        public Class<?> getExpectedClass() {
+            return Instant.class;
+        }
+    }
+
+    /**
+     * A LogicalTypeWriter implementation for writing "local-timestamp-millis" Avro logical type data.
+     * The expected Java class is java.time.LocalDateTime.
+     */
+    public static class LocalTimestampMillisWriter implements AvroWriter.LogicalTypeWriter {
+        @Override
+        public void write(Object value, Schema schema, Encoder out) throws IOException {
+            out.writeLong(((LocalDateTime) value).toInstant(ZoneOffset.UTC).toEpochMilli());
+        }
+
+        @Override
+        public Class<?> getExpectedClass() {
+            return LocalDateTime.class;
+        }
+    }
+
+    /**
+     * A LogicalTypeWriter implementation for writing "local-timestamp-micros" Avro logical type data.
+     * The expected Java class is java.time.LocalDateTime.
+     */
+    public static class LocalTimestampMicrosWriter implements AvroWriter.LogicalTypeWriter {
+        @Override
+        public void write(Object value, Schema schema, Encoder out) throws IOException {
+            LocalDateTime dateTime = (LocalDateTime) value;
+            long micros = dateTime.toEpochSecond(ZoneOffset.UTC) * 1_000_000 + dateTime.getNano() / 1_000;
+            out.writeLong(micros);
+        }
+
+        @Override
+        public Class<?> getExpectedClass() {
+            return LocalDateTime.class;
+        }
     }
 }

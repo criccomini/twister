@@ -12,7 +12,12 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.util.Utf8;
 
 import java.io.ByteArrayInputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -237,5 +242,219 @@ public class AvroWriterTest extends TestCase {
         assertEquals(3.14f, (float)record.get("floatField"), 0.001);
         assertEquals(2.718281828, (double)record.get("doubleField"), 0.001);
         assertNull(record.get("nullField"));
+    }
+
+    public void testDecimal() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"decimalField\", \"type\": {\"type\": \"bytes\", \"logicalType\": \"decimal\", \"precision\": 4, \"scale\": 2}}\n" +
+                "  ]\n" +
+                "}";
+
+        Schema schema = new Schema.Parser().parse(schemaJson);
+        Map<String, Object> recordMap = new HashMap<>();
+        recordMap.put("decimalField", new BigDecimal("12.34"));
+
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
+
+        GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
+        GenericRecord genericRecord = datumReader.read(null, decoder);
+
+        BigDecimal decodedDecimal = new BigDecimal(new BigInteger(((ByteBuffer) genericRecord.get("decimalField")).array()), 2);
+        assertEquals(new BigDecimal("12.34"), decodedDecimal);
+    }
+
+    public void testUUID() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"uuidField\", \"type\": {\"type\": \"string\", \"logicalType\": \"uuid\"}}\n" +
+                "  ]\n" +
+                "}";
+
+        Schema schema = new Schema.Parser().parse(schemaJson);
+        Map<String, Object> recordMap = new HashMap<>();
+        UUID uuid = UUID.randomUUID();
+        recordMap.put("uuidField", uuid);
+
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
+
+        GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
+        GenericRecord genericRecord = datumReader.read(null, decoder);
+
+        assertEquals(uuid.toString(), genericRecord.get("uuidField").toString());
+    }
+
+    public void testDate() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"dateField\", \"type\": {\"type\": \"int\", \"logicalType\": \"date\"}}\n" +
+                "  ]\n" +
+                "}";
+
+        Schema schema = new Schema.Parser().parse(schemaJson);
+        Map<String, Object> recordMap = new HashMap<>();
+        LocalDate date = LocalDate.now();
+        recordMap.put("dateField", date);
+
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
+
+        GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
+        GenericRecord genericRecord = datumReader.read(null, decoder);
+
+        int readDays = (Integer) genericRecord.get("dateField");
+        assertEquals(date, LocalDate.ofEpochDay(readDays));
+    }
+
+    public void testTimeMillis() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"timeMillisField\", \"type\": {\"type\": \"int\", \"logicalType\": \"time-millis\"}}\n" +
+                "  ]\n" +
+                "}";
+
+        Schema schema = new Schema.Parser().parse(schemaJson);
+        Map<String, Object> recordMap = new HashMap<>();
+        LocalTime time = LocalTime.now();
+        recordMap.put("timeMillisField", time);
+
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
+
+        GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
+        GenericRecord genericRecord = datumReader.read(null, decoder);
+
+        int readMillis = (Integer) genericRecord.get("timeMillisField");
+        assertEquals(time.truncatedTo(ChronoUnit.MILLIS), LocalTime.ofNanoOfDay((long) readMillis * 1_000_000));
+    }
+
+    public void testTimeMicros() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"timeMicrosField\", \"type\": {\"type\": \"long\", \"logicalType\": \"time-micros\"}}\n" +
+                "  ]\n" +
+                "}";
+
+        Schema schema = new Schema.Parser().parse(schemaJson);
+        Map<String, Object> recordMap = new HashMap<>();
+        LocalTime time = LocalTime.now();
+        recordMap.put("timeMicrosField", time);
+
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
+
+        GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
+        GenericRecord genericRecord = datumReader.read(null, decoder);
+
+        long readMicros = (Long) genericRecord.get("timeMicrosField");
+        assertEquals(time.truncatedTo(ChronoUnit.MICROS), LocalTime.ofNanoOfDay(readMicros * 1_000));
+    }
+
+    public void testTimestampMillis() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"timestampMillisField\", \"type\": {\"type\": \"long\", \"logicalType\": \"timestamp-millis\"}}\n" +
+                "  ]\n" +
+                "}";
+
+        Schema schema = new Schema.Parser().parse(schemaJson);
+        Map<String, Object> recordMap = new HashMap<>();
+        Instant timestamp = Instant.now();
+        recordMap.put("timestampMillisField", timestamp);
+
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
+
+        GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
+        GenericRecord genericRecord = datumReader.read(null, decoder);
+
+        long readMillis = (Long) genericRecord.get("timestampMillisField");
+        assertEquals(timestamp.truncatedTo(ChronoUnit.MILLIS), Instant.ofEpochMilli(readMillis));
+    }
+
+    public void testTimestampMicros() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"timestampMicrosField\", \"type\": {\"type\": \"long\", \"logicalType\": \"timestamp-micros\"}}\n" +
+                "  ]\n" +
+                "}";
+
+        Schema schema = new Schema.Parser().parse(schemaJson);
+        Map<String, Object> recordMap = new HashMap<>();
+        Instant timestamp = Instant.now();
+        recordMap.put("timestampMicrosField", timestamp);
+
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
+
+        GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
+        GenericRecord genericRecord = datumReader.read(null, decoder);
+
+        long readMicros = (Long) genericRecord.get("timestampMicrosField");
+        assertEquals(timestamp.truncatedTo(ChronoUnit.MICROS), Instant.ofEpochSecond(0, readMicros * 1_000));
+    }
+
+    public void testLocalTimestampMillis() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"localTimestampMillisField\", \"type\": {\"type\": \"long\", \"logicalType\": \"local-timestamp-millis\"}}\n" +
+                "  ]\n" +
+                "}";
+
+        Schema schema = new Schema.Parser().parse(schemaJson);
+        Map<String, Object> recordMap = new HashMap<>();
+        LocalDateTime localTimestamp = LocalDateTime.now();
+        recordMap.put("localTimestampMillisField", localTimestamp);
+
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
+
+        GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
+        GenericRecord genericRecord = datumReader.read(null, decoder);
+
+        long readMillis = (Long) genericRecord.get("localTimestampMillisField");
+        assertEquals(localTimestamp.truncatedTo(ChronoUnit.MILLIS), LocalDateTime.ofInstant(Instant.ofEpochMilli(readMillis), ZoneOffset.UTC));
+    }
+
+    public void testLocalTimestampMicros() throws Exception {
+        String schemaJson = "{\n" +
+                "  \"type\": \"record\",\n" +
+                "  \"name\": \"TestRecord\",\n" +
+                "  \"fields\": [\n" +
+                "    {\"name\": \"localTimestampMicrosField\", \"type\": {\"type\": \"long\", \"logicalType\": \"local-timestamp-micros\"}}\n" +
+                "  ]\n" +
+                "}";
+
+        Schema schema = new Schema.Parser().parse(schemaJson);
+        Map<String, Object> recordMap = new HashMap<>();
+        LocalDateTime localTimestamp = LocalDateTime.now();
+        recordMap.put("localTimestampMicrosField", localTimestamp);
+
+        ByteBuffer byteBuffer = new AvroWriter().write(recordMap, schema);
+
+        GenericDatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
+        Decoder decoder = DecoderFactory.get().binaryDecoder(byteBuffer.array(), null);
+        GenericRecord genericRecord = datumReader.read(null, decoder);
+
+        long readMicros = (Long) genericRecord.get("localTimestampMicrosField");
+        assertEquals(localTimestamp.truncatedTo(ChronoUnit.MICROS), LocalDateTime.ofInstant(Instant.ofEpochSecond(0, readMicros * 1_000), ZoneOffset.UTC));
     }
 }

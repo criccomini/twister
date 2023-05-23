@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class AvroWrapper {
 
-    private static final Map<String, LogicalTypeConverter> DEFAULT_LOGICAL_TYPE_CONVERTERS;
+    public static final Map<String, LogicalTypeConverter> DEFAULT_LOGICAL_TYPE_CONVERTERS;
 
     private final Map<String, LogicalTypeConverter> logicalTypeConverters;
 
