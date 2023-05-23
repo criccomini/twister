@@ -122,10 +122,7 @@ Despite its simplicity and flexibility, Twister attempts to maintain decent perf
 
 ## Future Work
 
-* Avro default support
-* Avro logical type support
 * Protobuf WKT support
-* .proto ➡️ Protobuf Descriptor converter
 * JDBC row ➡️ Map wrapper
 
 ## 🤖 GPT-4 Generated
