@@ -24,36 +24,48 @@ import java.util.concurrent.TimeUnit;
 public class AvroSchemaInferrer {
 
     /**
+     * A map storing LogicalTypeInferrer instances associated with specific classes. Each LogicalTypeInferrer
+     * is responsible for inferring the Avro logical type for instances of its associated class.
+     * <p>
+     * The keys of the map are Class objects representing the classes that the inferrers can handle. The values
+     * are instances of LogicalTypeInferrer, each capable of inferring the Avro logical type for instances of its
+     * associated class.
+     * <p>
+     * For example, if there is a key-value pair (java.time.Instant.class, timestampInferrer), this means the
+     * timestampInferrer is used to infer the Avro logical type for instances of java.time.Instant.
+     */
+    private final Map<Class<?>, LogicalTypeInferrer<?>> inferrers;
+
+    /**
      * Flag indicating whether maps should be treated as records during Avro schema inference.
      * Default value is {@code true}.
      */
     private final boolean mapAsRecord;
 
     /**
-     * A TimeUnit to determine the precision of time-based Avro logical types.
-     * It must be either MILLIS or MICROS.
-     */
-    private final TimeUnit timePrecision;
-
-    /**
      * Creates an AvroSchemaInferrer with the default behavior of treating maps as records.
      */
     public AvroSchemaInferrer() {
-        this(true, TimeUnit.MILLISECONDS);
+        this(mapOfDefaultInferrers(TimeUnit.MILLISECONDS), true);
     }
 
     /**
-     * Creates an AvroSchemaInferrer.
+     * Constructs a new instance of the AvroSchemaInferrer.
      *
-     * @param mapAsRecord A flag to indicate whether maps should be treated as records.
-     * @param timePrecision A TimeUnit to determine the precision of time-based Avro logical types.
+     * @param inferrers A map containing the inferrers for logical types.
+     *                  The map keys are the classes of the objects the inferrer can process,
+     *                  and the values are the corresponding inferrer instances.
+     * @param mapAsRecord A flag to indicate whether maps should be treated as Avro records.
+     *                    If set to true, maps are converted to Avro records; otherwise,
+     *                    they're converted to Avro maps.
+     * @throws IllegalArgumentException if timePrecision is not either TimeUnit.MILLISECONDS
+     *                                  or TimeUnit.MICROSECONDS.
      */
-    public AvroSchemaInferrer(boolean mapAsRecord, TimeUnit timePrecision) {
-        if (timePrecision != TimeUnit.MILLISECONDS && timePrecision != TimeUnit.MICROSECONDS) {
-            throw new IllegalArgumentException("Unsupported time precision: " + timePrecision);
-        }
+    public AvroSchemaInferrer(
+            Map<Class<?>, LogicalTypeInferrer<?>> inferrers,
+            boolean mapAsRecord) {
+        this.inferrers = inferrers;
         this.mapAsRecord = mapAsRecord;
-        this.timePrecision = timePrecision;
     }
 
     /**
@@ -80,7 +92,10 @@ public class AvroSchemaInferrer {
         Schema schema;
         String finalRecordName = (parentName != null) ? parentName + "_" + fieldName : fieldName;
 
-        if (value == null) {
+        LogicalTypeInferrer inferrer = value != null ? inferrers.get(value.getClass()) : null;
+        if (inferrer != null) {
+            schema = inferrer.infer(value);
+        } else if (value == null) {
             schema = SchemaBuilder.builder().nullType();
         } else if (value instanceof Integer) {
             schema = SchemaBuilder.builder().intType();
@@ -115,32 +130,6 @@ public class AvroSchemaInferrer {
                 schema = SchemaBuilder.array().items(nullableSchema(elementType));
             } else {
                 throw new IllegalArgumentException("Cannot infer schema for an empty array");
-            }
-        } else if (value instanceof BigDecimal) {
-            BigDecimal bigDecimal = (BigDecimal) value;
-            schema = LogicalTypes.decimal(bigDecimal.precision(), bigDecimal.scale())
-                    .addToSchema(Schema.create(Schema.Type.BYTES));
-        } else if (value instanceof UUID) {
-            schema = LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING));
-        } else if (value instanceof LocalDate) {
-            schema = LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
-        } else if (value instanceof LocalTime) {
-            if (timePrecision == TimeUnit.MILLISECONDS) {
-                schema = LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT));
-            } else {
-                schema = LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
-            }
-        } else if (value instanceof Instant) {
-            if (timePrecision == TimeUnit.MILLISECONDS) {
-                schema = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
-            } else {
-                schema = LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
-            }
-        } else if (value instanceof LocalDateTime) {
-            if (timePrecision == TimeUnit.MILLISECONDS) {
-                schema = LogicalTypes.localTimestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
-            } else {
-                schema = LogicalTypes.localTimestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
             }
         } else {
             throw new IllegalArgumentException("Unsupported type: " + value.getClass().getName());
@@ -207,5 +196,53 @@ public class AvroSchemaInferrer {
         } else {
             return schema;
         }
+    }
+
+    public static Map<Class<?>, LogicalTypeInferrer<?>> mapOfDefaultInferrers(TimeUnit timePrecision) {
+        return Map.of(
+                BigDecimal.class, (LogicalTypeInferrer<BigDecimal>) value ->
+                        LogicalTypes.decimal(value.precision(), value.scale())
+                                .addToSchema(Schema.create(Schema.Type.BYTES)),
+                UUID.class, (LogicalTypeInferrer<UUID>) value ->
+                        LogicalTypes.uuid().addToSchema(Schema.create(Schema.Type.STRING)),
+                LocalDate.class, (LogicalTypeInferrer<LocalDate>) value ->
+                        LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT)),
+                LocalTime.class, (LogicalTypeInferrer<LocalTime>) value -> {
+                    return (timePrecision == TimeUnit.MILLISECONDS)
+                            ? LogicalTypes.timeMillis().addToSchema(Schema.create(Schema.Type.INT))
+                            : LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
+                },
+                Instant.class, (LogicalTypeInferrer<Instant>) value -> {
+                    return (timePrecision == TimeUnit.MILLISECONDS)
+                            ? LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG))
+                            : LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+                },
+                LocalDateTime.class, (LogicalTypeInferrer<LocalDateTime>) value -> {
+                    return (timePrecision == TimeUnit.MILLISECONDS)
+                            ? LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG))
+                            : LogicalTypes.timestampMicros().addToSchema(Schema.create(Schema.Type.LONG));
+                }
+        );
+    }
+
+    /**
+     * The LogicalTypeInferrer interface defines a method for inferring an Avro schema from a given object.
+     * <p>
+     * Implementations of this interface should provide the logic to generate an Avro schema that correctly
+     * describes the structure and data types of the object, including any nested objects.
+     * <p>
+     * The infer method is expected to return a Schema object that accurately reflects the object's structure.
+     *
+     * @param <T> The type of objects this inferrer can process.
+     */
+    public interface LogicalTypeInferrer<T> {
+
+        /**
+         * Infers an Avro schema from the provided object.
+         *
+         * @param object The object to infer the schema from.
+         * @return The inferred Avro schema.
+         */
+        Schema infer(T object);
     }
 }

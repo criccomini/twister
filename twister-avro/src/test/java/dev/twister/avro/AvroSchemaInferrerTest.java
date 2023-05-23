@@ -5,9 +5,14 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class AvroSchemaInferrerTest extends TestCase {
@@ -66,7 +71,7 @@ public class AvroSchemaInferrerTest extends TestCase {
         map.put("field3", 45.67);
 
         // Create an AvroSchemaInferrer with mapAsRecord = false
-        AvroSchemaInferrer inferrer = new AvroSchemaInferrer(false, TimeUnit.MILLISECONDS);
+        AvroSchemaInferrer inferrer = new AvroSchemaInferrer(AvroSchemaInferrer.mapOfDefaultInferrers(TimeUnit.MILLISECONDS), false);
 
         // Infer the Avro schema for the map
         Schema schema = inferrer.infer(map, "TestRecord");
@@ -83,6 +88,97 @@ public class AvroSchemaInferrerTest extends TestCase {
 
         Schema schema = new AvroSchemaInferrer().infer(map, "TestDecimal");
         String expectedSchema = String.format("{\"type\":\"record\",\"name\":\"TestDecimal\",\"fields\":[{\"name\":\"decimalField\",\"type\":[\"null\",{\"type\":\"bytes\",\"logicalType\":\"decimal\",\"precision\":%d,\"scale\":%d}]}]}", decimalValue.precision(), decimalValue.scale());
+
+        assertEquals(expectedSchema, schema.toString());
+    }
+
+    public void testUUID() {
+        Map<String, Object> map = new HashMap<>();
+        UUID uuid = UUID.randomUUID();
+        map.put("uuidField", uuid);
+
+        Schema schema = new AvroSchemaInferrer().infer(map, "TestUUID");
+        String expectedSchema = "{\"type\":\"record\",\"name\":\"TestUUID\",\"fields\":[{\"name\":\"uuidField\",\"type\":[\"null\",{\"type\":\"string\",\"logicalType\":\"uuid\"}]}]}";
+
+        assertEquals(expectedSchema, schema.toString());
+    }
+
+    public void testLocalDate() {
+        Map<String, Object> map = new HashMap<>();
+        LocalDate date = LocalDate.now();
+        map.put("dateField", date);
+
+        Schema schema = new AvroSchemaInferrer().infer(map, "TestDate");
+        String expectedSchema = "{\"type\":\"record\",\"name\":\"TestDate\",\"fields\":[{\"name\":\"dateField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"date\"}]}]}";
+
+        assertEquals(expectedSchema, schema.toString());
+    }
+
+    public void testLocalTimeMillis() {
+        Map<String, Object> map = new HashMap<>();
+        LocalTime time = LocalTime.now();
+        map.put("timeField", time);
+
+        Schema schema = new AvroSchemaInferrer().infer(map, "TestTime");
+        String expectedSchema = "{\"type\":\"record\",\"name\":\"TestTime\",\"fields\":[{\"name\":\"timeField\",\"type\":[\"null\",{\"type\":\"int\",\"logicalType\":\"time-millis\"}]}]}";
+
+        assertEquals(expectedSchema, schema.toString());
+    }
+
+    public void testLocalTimeMicros() {
+        Map<String, Object> map = new HashMap<>();
+        LocalTime time = LocalTime.now();
+        map.put("timeField", time);
+
+        AvroSchemaInferrer inferrer = new AvroSchemaInferrer(AvroSchemaInferrer.mapOfDefaultInferrers(TimeUnit.MICROSECONDS), true);
+        Schema schema = inferrer.infer(map, "TestTimeMicros");
+        String expectedSchema = "{\"type\":\"record\",\"name\":\"TestTimeMicros\",\"fields\":[{\"name\":\"timeField\",\"type\":[\"null\",{\"type\":\"long\",\"logicalType\":\"time-micros\"}]}]}";
+
+        assertEquals(expectedSchema, schema.toString());
+    }
+
+    public void testInstantMillis() {
+        Map<String, Object> map = new HashMap<>();
+        Instant instant = Instant.now();
+        map.put("timestampField", instant);
+
+        Schema schema = new AvroSchemaInferrer().infer(map, "TestTimestamp");
+        String expectedSchema = "{\"type\":\"record\",\"name\":\"TestTimestamp\",\"fields\":[{\"name\":\"timestampField\",\"type\":[\"null\",{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}]}]}";
+
+        assertEquals(expectedSchema, schema.toString());
+    }
+
+    public void testInstantMicros() {
+        Map<String, Object> map = new HashMap<>();
+        Instant instant = Instant.now();
+        map.put("timestampField", instant);
+
+        AvroSchemaInferrer inferrer = new AvroSchemaInferrer(AvroSchemaInferrer.mapOfDefaultInferrers(TimeUnit.MICROSECONDS), true);
+        Schema schema = inferrer.infer(map, "TestTimestampMicros");
+        String expectedSchema = "{\"type\":\"record\",\"name\":\"TestTimestampMicros\",\"fields\":[{\"name\":\"timestampField\",\"type\":[\"null\",{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}]}]}";
+
+        assertEquals(expectedSchema, schema.toString());
+    }
+
+    public void testLocalDateTimeMillis() {
+        Map<String, Object> map = new HashMap<>();
+        LocalDateTime dateTime = LocalDateTime.now();
+        map.put("dateTimeField", dateTime);
+
+        Schema schema = new AvroSchemaInferrer().infer(map, "TestDateTime");
+        String expectedSchema = "{\"type\":\"record\",\"name\":\"TestDateTime\",\"fields\":[{\"name\":\"dateTimeField\",\"type\":[\"null\",{\"type\":\"long\",\"logicalType\":\"timestamp-millis\"}]}]}";
+
+        assertEquals(expectedSchema, schema.toString());
+    }
+
+    public void testLocalDateTimeMicros() {
+        Map<String, Object> map = new HashMap<>();
+        LocalDateTime dateTime = LocalDateTime.now();
+        map.put("dateTimeField", dateTime);
+
+        AvroSchemaInferrer inferrer = new AvroSchemaInferrer(AvroSchemaInferrer.mapOfDefaultInferrers(TimeUnit.MICROSECONDS), true);
+        Schema schema = inferrer.infer(map, "TestDateTimeMicros");
+        String expectedSchema = "{\"type\":\"record\",\"name\":\"TestDateTimeMicros\",\"fields\":[{\"name\":\"dateTimeField\",\"type\":[\"null\",{\"type\":\"long\",\"logicalType\":\"timestamp-micros\"}]}]}";
 
         assertEquals(expectedSchema, schema.toString());
     }
