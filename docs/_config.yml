@@ -1,0 +1,49 @@
+url: "https://twister.dev" # the base hostname & protocol for your site, e.g. http://example.com
+baseurl: "" # the subpath of your site, e.g. /blog
+title: "Twister" # the name of your site, e.g. ACME Corp.
+description: A Java library that converts Avro and Protobuf bytes and objects to and from Java POJOs.
+theme: just-the-docs
+collections:
+  recipes:
+    permalink: "/:collection/:path/"
+    output: true
+just_the_docs:
+  collections:
+    recipes:
+      name: Recipes
+enable_copy_code_button: true
+heading_anchors: true
+permalink: pretty
+
+# Foooter
+footer_content: "&copy; 2023 Chris Riccomini. Distributed under an <a href=\"https://github.com/criccomini/twister/tree/main/LICENSE\">MIT license.</a>"
+
+# Footer "Edit this page on GitHub" link text
+gh_edit_link: true # show or hide edit this page link
+gh_edit_link_text: "&#9999;&#65039; Edit this page on GitHub"
+gh_edit_repository: "https://github.com/criccomini/twister" # the github URL for your repo
+gh_edit_branch: "main" # the branch that your docs is served from
+gh_edit_source: docs # the folder that contains your docs files
+gh_edit_view_mode: "tree" # "tree" or "edit" if you want the user to jump into the editor immediately
+
+plugins:
+  - jekyll-seo-tag
+  - jekyll-github-metadata
+
+compress_html:
+  clippings: all
+  comments: all
+  endings: all
+  startings: []
+  blanklines: false
+  profile: false
+
+# Upper Right Link
+nav_external_links:
+  - title: Twister on GitHub
+    url: https://github.com/criccomini/twister
+
+# Aux links for the upper right navigation
+aux_links:
+  "Twister on GitHub":
+    - "//github.com/criccomini/twister"

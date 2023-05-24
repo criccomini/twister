@@ -36,3 +36,7 @@ target/
 
 ### Mac OS ###
 .DS_Store
+
+### Jekyll Site ###
+docs/_site
+docs/.jekyll-cache
