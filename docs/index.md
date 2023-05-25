@@ -39,12 +39,12 @@ Add Twister to your Maven pom.xml:
     <dependency>
         <groupId>dev.twister</groupId>
         <artifactId>twister-avro</artifactId>
-        <version>0.1.1</version>
+        <version>0.2.0</version>
     </dependency>
     <dependency>
         <groupId>dev.twister</groupId>
         <artifactId>twister-proto</artifactId>
-        <version>0.1.1</version>
+        <version>0.2.0</version>
     </dependency>
 </dependencies>
 ```
@@ -53,8 +53,8 @@ Or build.gradle:
 
 ```groovy
 dependencies {
-    implementation 'dev.twister:twister-avro:0.1.1'
-    implementation 'dev.twister:twister-proto:0.1.1'
+    implementation 'dev.twister:twister-avro:0.2.0'
+    implementation 'dev.twister:twister-proto:0.2.0'
 }
 ```
 

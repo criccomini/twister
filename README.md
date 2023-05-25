@@ -4,14 +4,14 @@
 
 | From                     | To                      | Supported  |
 |--------------------------|-------------------------|------------|
-| Avro Record bytes        | Map POJOs               | ☑️         |
-| Avro Record objects      | Map wrapper             | ☑️         |
-| Map POJOs                | Avro Record bytes       | ☑️         |
-| Map POJOs                | Avro Schema             | ☑️         |
-| Map POJOs                | Protobuf Descriptor     | ☑️         |
-| Map POJOs                | Protobuf Message bytes  | ☑️         |
-| Protobuf Message bytes   | Map POJOs               | ☑️         |
-| Protobuf Message objects | Map wrapper             | ☑️         |
+| Avro Record bytes        | Map POJOs               | ✅️         |
+| Avro Record objects      | Map wrapper             | ✅️         |
+| Map POJOs                | Avro Record bytes       | ✅️         |
+| Map POJOs                | Avro Schema             | ✅️         |
+| Map POJOs                | Protobuf Descriptor     | ✅️         |
+| Map POJOs                | Protobuf Message bytes  | ✅️         |
+| Protobuf Message bytes   | Map POJOs               | ✅️         |
+| Protobuf Message objects | Map wrapper             | ✅️         |
 
 **Note**: Twister makes it easy to convert between Avro/Proto and JSON objects using [Jackson's ObjectMapper](https://github.com/FasterXML/jackson-databind), which can convert map POJOs ↔️ JSON.
 
