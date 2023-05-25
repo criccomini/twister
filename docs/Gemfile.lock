@@ -85,6 +85,7 @@ PLATFORMS
   x86_64-darwin-21
 
 DEPENDENCIES
+  jekyll
   jekyll-github-metadata
   jekyll-seo-tag
   just-the-docs
