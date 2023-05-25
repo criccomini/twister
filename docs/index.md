@@ -10,6 +10,18 @@ nav_order: 1
 Convert Avro and Protobuf bytes and objects to and from Java POJOs.
 {: .fs-6 .fw-300 }
 
+
+| From                     | To                      | Supported  |
+|--------------------------|-------------------------|------------|
+| Avro Record bytes        | Map POJOs               | ✅️         |
+| Avro Record objects      | Map wrapper             | ✅️         |
+| Map POJOs                | Avro Record bytes       | ✅️         |
+| Map POJOs                | Avro Schema             | ✅️         |
+| Map POJOs                | Protobuf Descriptor     | ✅️         |
+| Map POJOs                | Protobuf Message bytes  | ✅️         |
+| Protobuf Message bytes   | Map POJOs               | ✅️         |
+| Protobuf Message objects | Map wrapper             | ✅️         |
+
 ## About Twister
 [Twister](https://github.com/criccomini/twister) is an open-source project that converts between Avro and Protobuf bytes and objects and Java Plain Old Java Objects ([POJOs](https://en.wikipedia.org/wiki/Plain_old_Java_object)).
 
