@@ -17,7 +17,7 @@
 
 ## Documentation
 
-Check out [https://twister.dev](https://twister.dev) for documentation and examples.
+Check out [twister.dev](https://twister.dev) for documentation and examples.
 
 ## Contributing
 
